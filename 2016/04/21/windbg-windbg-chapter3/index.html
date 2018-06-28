@@ -1,0 +1,1157 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/vendors/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/vendors/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.0.1" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="c++,windbg,disassembly," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="Binary World" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.0.1" />
+
+
+
+
+
+
+<meta name="description" content="导言已经介绍了函数和结构体的内容了，我想这次应该可以大致研究一下类相关的知识了。不过这次照例还是没有release版本的分析内容，而且这次讲类也只是讲解基础知识，对于类的高级用法，比如继承、成员函数指针这些都留到以后去研究。那么进入正题吧（貌似导言越来越短了，我在想以后要不要去掉）。">
+<meta name="keywords" content="c++,windbg,disassembly">
+<meta property="og:type" content="article">
+<meta property="og:title" content="WinDBG观世界（三）">
+<meta property="og:url" content="https://cloudy064.github.io/2016/04/21/windbg-windbg-chapter3/index.html">
+<meta property="og:site_name" content="Binary World">
+<meta property="og:description" content="导言已经介绍了函数和结构体的内容了，我想这次应该可以大致研究一下类相关的知识了。不过这次照例还是没有release版本的分析内容，而且这次讲类也只是讲解基础知识，对于类的高级用法，比如继承、成员函数指针这些都留到以后去研究。那么进入正题吧（貌似导言越来越短了，我在想以后要不要去掉）。">
+<meta property="og:locale" content="en">
+<meta property="og:image" content="https://cloudy064.github.io/2016/04/21/windbg-windbg-chapter3/SetConstructorBreakPoint.png">
+<meta property="og:image" content="https://cloudy064.github.io/2016/04/21/windbg-windbg-chapter3/HitConstructorBreakPoint.png">
+<meta property="og:image" content="https://cloudy064.github.io/2016/04/21/windbg-windbg-chapter3/GlobalVarCallStack.png">
+<meta property="og:image" content="https://cloudy064.github.io/2016/04/21/windbg-windbg-chapter3/InInitTermFunction.png">
+<meta property="og:image" content="https://cloudy064.github.io/2016/04/21/windbg-windbg-chapter3/AllRegisters.png">
+<meta property="og:image" content="https://cloudy064.github.io/2016/04/21/windbg-windbg-chapter3/CmpResult.png">
+<meta property="og:image" content="https://cloudy064.github.io/2016/04/21/windbg-windbg-chapter3/AfterCmpOperation.png">
+<meta property="og:image" content="https://cloudy064.github.io/2016/04/21/windbg-windbg-chapter3/ActualValueForCmp.png">
+<meta property="og:image" content="https://cloudy064.github.io/2016/04/21/windbg-windbg-chapter3/InitTermJmpBackToFuncHead.png">
+<meta property="og:image" content="https://cloudy064.github.io/2016/04/21/windbg-windbg-chapter3/HelloWorld2005PreCppInit.png">
+<meta property="og:image" content="https://cloudy064.github.io/2016/04/21/windbg-windbg-chapter3/PreCppInitDvResult.png">
+<meta property="og:image" content="https://cloudy064.github.io/2016/04/21/windbg-windbg-chapter3/PreCppInitDtValueResult.png">
+<meta property="og:image" content="https://cloudy064.github.io/2016/04/21/windbg-windbg-chapter3/DynamicInitializerForK.png">
+<meta property="og:image" content="https://cloudy064.github.io/2016/04/21/windbg-windbg-chapter3/SimpleClassConstructorCode.png">
+<meta property="og:image" content="https://cloudy064.github.io/2016/04/21/windbg-windbg-chapter3/SimpleClassThisPointToMemory.png">
+<meta property="og:image" content="https://cloudy064.github.io/2016/04/21/windbg-windbg-chapter3/DtSimpleClass.png">
+<meta property="og:image" content="https://cloudy064.github.io/2016/04/21/windbg-windbg-chapter3/SimpleClassMemoryMap.png">
+<meta property="og:image" content="https://cloudy064.github.io/2016/04/21/windbg-windbg-chapter3/ThePlaceWhereCallMain.png">
+<meta property="og:image" content="https://cloudy064.github.io/2016/04/21/windbg-windbg-chapter3/MainSimpleClassJ=233.png">
+<meta property="og:image" content="https://cloudy064.github.io/2016/04/21/windbg-windbg-chapter3/MainSimpleClassJ=233Stack.png">
+<meta property="og:image" content="https://cloudy064.github.io/2016/04/21/windbg-windbg-chapter3/SimpleClassCopyConstructorCode.png">
+<meta property="og:image" content="https://cloudy064.github.io/2016/04/21/windbg-windbg-chapter3/MainCompareTestAndTestConst.png">
+<meta property="og:image" content="https://cloudy064.github.io/2016/04/21/windbg-windbg-chapter3/MainCallTestVirtual.png">
+<meta property="og:image" content="https://cloudy064.github.io/2016/04/21/windbg-windbg-chapter3/MainCallTestStatic.png">
+<meta property="og:image" content="https://cloudy064.github.io/2016/04/21/windbg-windbg-chapter3/DtSimpleClass.png">
+<meta property="og:image" content="https://cloudy064.github.io/2016/04/21/windbg-windbg-chapter3/dd00406000.png">
+<meta property="og:image" content="https://cloudy064.github.io/2016/04/21/windbg-windbg-chapter3/da0040412c.png">
+<meta property="og:image" content="https://cloudy064.github.io/2016/04/21/windbg-windbg-chapter3/DumpHelloWorldHeaders.png">
+<meta property="og:image" content="https://cloudy064.github.io/2016/04/21/windbg-windbg-chapter3/lmvmHelloWorld2005.png">
+<meta property="og:image" content="https://cloudy064.github.io/2016/04/21/windbg-windbg-chapter3/s-saHelloWorld2005+4000L115C.png">
+<meta property="og:updated_time" content="2018-06-27T15:38:33.280Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="WinDBG观世界（三）">
+<meta name="twitter:description" content="导言已经介绍了函数和结构体的内容了，我想这次应该可以大致研究一下类相关的知识了。不过这次照例还是没有release版本的分析内容，而且这次讲类也只是讲解基础知识，对于类的高级用法，比如继承、成员函数指针这些都留到以后去研究。那么进入正题吧（貌似导言越来越短了，我在想以后要不要去掉）。">
+<meta name="twitter:image" content="https://cloudy064.github.io/2016/04/21/windbg-windbg-chapter3/SetConstructorBreakPoint.png">
+
+
+
+<script type="text/javascript" id="hexo.configuration">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    scheme: 'Mist',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: 0,
+      author: 'Author'
+    }
+  };
+</script>
+
+
+
+
+  <link rel="canonical" href="https://cloudy064.github.io/2016/04/21/windbg-windbg-chapter3/"/>
+
+  <title> WinDBG观世界（三） | Binary World </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="en">
+
+  
+
+
+
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?1ea1b41881eac9926d58af6b5fc9b354";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">Binary World</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle">cloudy066</p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            Categories
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archives
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="#" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br />
+            
+            Search
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup">
+ <span class="search-icon fa fa-search"></span>
+ <input type="text" id="local-search-input">
+ <div id="local-search-result"></div>
+ <span class="popup-btn-close">close</span>
+</div>
+
+
+    </div>
+  
+</nav>
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                WinDBG观世界（三）
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">Posted on</span>
+            <time itemprop="dateCreated" datetime="2016-04-21T00:48:07+08:00" content="2016-04-21">
+              2016-04-21
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp;
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/windbg/" itemprop="url" rel="index">
+                    <span itemprop="name">windbg</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                &nbsp; | &nbsp;
+                <a href="/2016/04/21/windbg-windbg-chapter3/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2016/04/21/windbg-windbg-chapter3/" itemprop="commentsCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+          
+          
+             <span id="/2016/04/21/windbg-windbg-chapter3/" class="leancloud_visitors" data-flag-title="WinDBG观世界（三）">
+               &nbsp; | &nbsp;
+               <span class="post-meta-item-icon">
+                 <i class="fa fa-eye"></i>
+               </span>
+               <span class="post-meta-item-text">visitors </span>
+               <span class="leancloud-visitors-count"></span>
+              </span>
+          
+
+          
+              &nbsp; | &nbsp;
+              <span class="page-pv"><i class="fa fa-file-o"></i>
+              <span class="busuanzi-value" id="busuanzi_value_page_pv" ></span>
+              </span>
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="导言"><a href="#导言" class="headerlink" title="导言"></a>导言</h2><p>已经介绍了函数和结构体的内容了，我想这次应该可以大致研究一下类相关的知识了。不过这次照例还是没有release版本的分析内容，而且这次讲类也只是讲解基础知识，对于类的高级用法，比如继承、成员函数指针这些都留到以后去研究。那么进入正题吧（貌似导言越来越短了，我在想以后要不要去掉）。<br><a id="more"></a></p>
+<h2 id="给结构体加上一点控制！再加上一点函数！"><a href="#给结构体加上一点控制！再加上一点函数！" class="headerlink" title="给结构体加上一点控制！再加上一点函数！"></a>给结构体加上一点控制！再加上一点函数！</h2><p>国际惯例，先贴分析的代码：<br><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">SimpleClass</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    SimpleClass(<span class="keyword">int</span> m)</span><br><span class="line">        : a(m)</span><br><span class="line">    &#123;</span><br><span class="line">        b = <span class="number">3</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    SimpleClass(<span class="keyword">const</span> SimpleClass&amp; rhs)</span><br><span class="line">        : a(rhs.a)</span><br><span class="line">        , b(rhs.b)</span><br><span class="line">    &#123;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    ~SimpleClass()</span><br><span class="line">    &#123;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">TestMemberFunc</span><span class="params">()</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        a += b;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">TestConstMemberFunc</span><span class="params">()</span> <span class="keyword">const</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="keyword">int</span> m = a;</span><br><span class="line">        m += b;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="function"><span class="keyword">virtual</span> <span class="keyword">void</span> <span class="title">TestVirtual</span><span class="params">(<span class="keyword">int</span> m)</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        a += m;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="function"><span class="keyword">static</span> <span class="keyword">int</span> <span class="title">TestStatic</span><span class="params">(<span class="keyword">int</span> m, <span class="keyword">int</span> n)</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> m + n;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">    <span class="keyword">int</span> a;</span><br><span class="line">    <span class="keyword">int</span> b;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">    <span class="keyword">static</span> <span class="keyword">const</span> <span class="keyword">char</span>* str;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> <span class="keyword">char</span>* SimpleClass::str = <span class="string">"joker"</span>;</span><br><span class="line"></span><br><span class="line"><span class="function">SimpleClass <span class="title">k</span><span class="params">(<span class="number">12</span>)</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc, <span class="keyword">char</span>** argv)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    SimpleClass j = <span class="number">233</span>;</span><br><span class="line">    SimpleClass k = ::k;</span><br><span class="line">    <span class="function">SimpleClass <span class="title">a</span><span class="params">(k)</span></span>;</span><br><span class="line"></span><br><span class="line">    k.TestMemberFunc();</span><br><span class="line">    k.TestConstMemberFunc();</span><br><span class="line"></span><br><span class="line">    a.TestVirtual(<span class="number">14</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">int</span> d = SimpleClass::TestStatic(<span class="number">12</span>, <span class="number">13</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>这次需要分析的东西还是挺多的，我把几个需要带到分析过程中的问题罗列出来吧：</p>
+<ol>
+<li>全局变量什么时候初始化</li>
+<li>类的初始化器和普通的赋值有什么不同</li>
+<li>成员变量的初始化顺序是什么</li>
+<li>没有给初始化值的成员变量编译器会做什么操作</li>
+<li>静态函数存放在什么地方，是否存放在类空间内部</li>
+<li>静态成员变量又存放在什么地方，是否存放在类空间的内部</li>
+<li>虚函数和普通成员函数有什么区别</li>
+<li>普通成员函数和const成员函数有什么区别</li>
+<li>静态函数和普通成员函数有什么区别</li>
+<li>全局变量和局部变量编译器是怎么区分开的</li>
+</ol>
+<p>看了下真的是任重而道远，其实我已经做了很多压缩了，比如“静态成员变量和全局变量谁先被初始化”这个问题由于难度问题，没有把它列进来。</p>
+<p>那么我们先挑个最恶心人的问题来吧，全局变量什么时候初始化。要想了解这个问题，最好的方法就是在类的构造函数处下一个断点，来，跟着我输入指令<code>bp HelloWorld2005!SimpleClass::SimpleClass</code>，然后回车。好吧，坑爹了，WinDBG认为这个断点有歧义，因为<code>SimpleClass</code>类有两个构造函数，所以它不知道给哪个构造函数下断点，哎，真是笨：<br><img src="/2016/04/21/windbg-windbg-chapter3/SetConstructorBreakPoint.png" title="设置构造函数断点"></p>
+<p>没办法了，只能根据WinDBG给我们的提示，用构造函数的具体地址来设置断点，来输入<code>bp 00401140</code>，然后输入<code>g</code>继续执行代码，直到运行到断点处：<br><img src="/2016/04/21/windbg-windbg-chapter3/HitConstructorBreakPoint.png" title="执行到断点处"></p>
+<p>这时我们只是想直到这个构造函数是谁调用过来的，那么我们就需要直到函数调用的堆栈，输入<code>kbn</code>回车即可：<br><img src="/2016/04/21/windbg-windbg-chapter3/GlobalVarCallStack.png" title="全局变量构造时的调用堆栈"></p>
+<p>可以看到它是由一个叫做<code>_initterm</code>的函数调用过来的，上面的哪个<code>dynamic initializer for &#39;k&#39;</code>可以先忽略，那个就是初始化全局变量k的地方，简单来说这个函数就对应了SimpleClass k(12)这句代码。那么我们现在要做的事情就是在_initterm这个函数调用的地方下一个断点。好了，按下<code>Ctrl+Shift+F5</code>重启程序，然后输入<code>bp MSVCR80D!_initterm</code>，输入<code>g</code>回车即可：<br><img src="/2016/04/21/windbg-windbg-chapter3/InInitTermFunction.png" title="调用_initterm的地方"></p>
+<p>前面保存堆栈就不用看了，主要看下面这块<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">mov eax, dword ptr [ebp+8]</span><br><span class="line">cmp eax, dword ptr [ebp+0Ch]</span><br><span class="line">jae MSVCR80D!_initterm+0x25</span><br></pre></td></tr></table></figure></p>
+<p>注意<code>ebp+8</code>指向了上一个堆栈的栈顶的第一个DWORD，<code>ebp+0Ch</code>指向了上一个堆栈栈顶的第二个DWORD，其实应该也是传递给<code>_initterm</code>函数的两个参数，这里只是比较这两个数值是否相等。这时肯定有人会问了，<code>cmp</code>比较之后的结果存放在哪里呢？当然是寄存器了，只是这个寄存器比较特殊，它叫标志寄存器，你平时在WinDBG中看不到这个寄存器，但是你可以通过按下<code>Alt+4</code>弹出一个罗列了所有寄存器的对话框：<br><img src="/2016/04/21/windbg-windbg-chapter3/AllRegisters.png" title="所有的寄存器"></p>
+<p>确实相当多，不过这里我只介绍<code>cmp</code>会用到的，一个是进位标记<code>cf</code>（carry flag）和零位标记<code>zf</code>（zero flag）。<code>cmp</code>比较下来不过就是小中大三种结果，那么对应到标志寄存器上的表现如下：<br><img src="/2016/04/21/windbg-windbg-chapter3/CmpResult.png" title="cmp比较的结果"></p>
+<p>那么我们这里执行完<code>cmp</code>之后看到这两个寄存器的内容如下：<br><img src="/2016/04/21/windbg-windbg-chapter3/AfterCmpOperation.png" title="cmp执行之后寄存器的内容"></p>
+<p>我们再人肉比较一下这两个值吧：<br><img src="/2016/04/21/windbg-windbg-chapter3/ActualValueForCmp.png" title="两个值的具体内容"></p>
+<p>可以发现<code>ebp+8</code>的值小于<code>ebp+0Ch</code>的值，所以说<code>zf</code>应该是0，<code>cf</code>应该是1，对照寄存器的内容，怎么样，我没有忽悠你吧。</p>
+<p>下面是一条新的指令<code>jae MSVCR80D!_initterm+0x25</code>，当然其实我现在也记不住那么多指令，只能依靠谷歌和翻书。<code>jae</code>指令的意思是：基于无符号数的比较结果，如果大于等于就执行后面的跳转。而前面比较的结果是小于，所以不会执行后面的跳转，指令选择继续往下执行。同样的指令还有很多，我这里不想介绍太多，大家可以自行翻书。</p>
+<p>下面三条语句也执行了同样的操作<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">mov ecx, dword ptr [ebp+8]</span><br><span class="line">cmp dword ptr [ecx], 0</span><br><span class="line">je MSVCR80D!_initterm+0x1a</span><br></pre></td></tr></table></figure></p>
+<p>这里的意思也差不多，它先取<code>ebp+8</code>指向地址的值，把它放到ecx中，然后在将这个值指向的值与0进行比较，如果等于0的话就跳转到<code>MSVCR80D!_initterm+0x1a</code>处执行。这里具体比较内容和结果自己去探索，我这里就看到它执行了后面的跳转。然后他又执行了下面的这段代码：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">mov ecx, dword ptr [ebp+8]</span><br><span class="line">add ecx, 4</span><br><span class="line">jmp MSVCR80D!_initterm+0x3</span><br></pre></td></tr></table></figure></p>
+<p>它又一次取了<code>ebp+8</code>的值，并把它加4,所以更加肯定了<code>ebp+8</code>存放的是一个指针，这里只是对指针做了一个偏移操作。然后将<code>ecx</code>的值又放回了<code>ebp+8</code>指向的地址，接着跳转到了<code>_initterm+0x3</code>的位置，也就是下面这段代码：<br><img src="/2016/04/21/windbg-windbg-chapter3/InitTermJmpBackToFuncHead.png" title="跳转回去开头"></p>
+<p>好了，整个函数就只剩下一段汇编没有分析了：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">mov edx, dword ptr [ebp+8]</span><br><span class="line">mov eax, dword ptr [edx]</span><br><span class="line">call eax</span><br></pre></td></tr></table></figure></p>
+<p>看到<code>call eax</code>第一反应应该就是这肯定是调用了一个函数，只是这个函数可能是通过参数传递进来的。这里继续引用<code>ebp+8</code>指向的值，放到edx中，然后把这个值指向的内存内容放到eax中，而这个值则正好是一个函数的地址。</p>
+<p>因此我有理由相信，这个函数接受两个参数，第一个是<code>ebp+8</code>,第二个是<code>ebp+0Ch</code>，并且从<code>ebp+8</code>到<code>ebp+0Ch</code>这个范围中存放了一系列的函数的地址，而这个函数做的事情就是不断地循环，如果遇到不是空指针的就调用这个函数。我把这段函数具体化为C++代码，应该大致如下：<br><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">void</span> _initterm(<span class="keyword">void</span>* from, <span class="keyword">void</span>* to)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">while</span> (from &lt; to)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">if</span> (*from != <span class="literal">NULL</span>)</span><br><span class="line">        &#123;</span><br><span class="line">            functype func = (functype)*from;</span><br><span class="line">            func();</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        from++;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>其中functype我也不知道是什么类型，所以就遗留着吧。搞定了这个函数的含义，下面就好办了，就是不断地尝试进入函数体的内部，直到调用到了<code>SimpleClass</code>的构造函数位置。</p>
+<p>那我们调用到<code>eax</code>中函数的时候，就用F11调试进入函数内部（记得用<code>kbn</code>看下调用堆栈，以防调试错了地方，因为一共会调用两次<code>_initterm</code>函数，我们需要分析的是<code>__tmainCRTStartup</code>调用过来的<code>_initterm</code>函数）</p>
+<p>第一次调进来好像是调到了一个叫做<code>pre_cpp_init</code>的函数中了，这货居然还是HelloWorld2005中的函数，看看也无妨，可以更加了解一下运行的机制：<br><img src="/2016/04/21/windbg-windbg-chapter3/HelloWorld2005PreCppInit.png" title="pre_cpp_init函数"></p>
+<p>国际惯例，前面两句保存堆栈，但是注意这里其实少了我们以前看到的那些<code>sub esp 120h</code>这样的语句，额，可能是没有声明局部变量？或者是被优化掉了？以后讨论。然后它将一个叫做<code>_RTC_Terminate</code>的函数进行压栈，这个函数我查了好久都没有找到是干嘛的，有熟悉的可以告诉我一下(<a href="mailto:cloudy064@gmail.com" target="_blank" rel="noopener">cloudy064@gmail.com</a>)，或者等我加了评论模块再说，万分感谢。</p>
+<p>然后就是熟悉的两个个操作：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">call HelloWorld2005!atexit</span><br><span class="line">add esp, 4</span><br></pre></td></tr></table></figure></p>
+<p>现在我们应该会知道之前压栈的<code>_RTC_Terminate</code>是一个<code>atexit</code>需要用到的参数，然后<code>pre_cpp_init</code>调用<code>atexit</code>函数，返回之后，利用<code>add esp, 4</code>清除临时变量，恢复堆栈。这里我就不进去<code>atexit</code>里面看了，我觉得会吐血，以后安排补丁文章来搞定这些一直没有分析的问题吧。</p>
+<p>继续看后面几句：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">mov eax, dword ptr [HelloWorld2005!_newmode]</span><br><span class="line">mov dword ptr [HelloWorld2005!startinfo], eax</span><br><span class="line">push offset HelloWorld2005!startinfo</span><br></pre></td></tr></table></figure></p>
+<p>依据以前的经验，这里的<code>HelloWorld2005!_newmode</code>和<code>HelloWorld2005!startinfo</code>应该是<code>HelloWorld2005</code>里面的全局变量，虽然我不知道它是在哪里初始化的，但是不妨碍我们继续分析。我们可以通过<code>dv</code>（dump value）指令来查看这两个变量的内容：<br><img src="/2016/04/21/windbg-windbg-chapter3/PreCppInitDvResult.png" title="用dv查看结果"></p>
+<p>发现我们只能看到startinfo的类型信息，却得不到它的内容，这个时候应该介绍新指令:<code>dt</code>（dump type），这个指令可以在变量类型为符合类型（比如结构体）的时候发挥作用。利用<code>dt</code>指令查看到的结果如下：<br><img src="/2016/04/21/windbg-windbg-chapter3/PreCppInitDtValueResult.png" title="dt查看得到的结果"></p>
+<p>恩，这下能够看到它的成员变量的值这些信息了。额，你还不放心，还想看它的结构体内部变量是怎么分布的？没问题，用<code>dt _startupinfo</code>来查看就行了，这里我就不贴出来结果了，大家自己试验吧。</p>
+<p>所以这里就只是初始化了全局变量<code>startinfo</code>，最后一句<code>push offset HelloWorld2005!startinfo</code>你就可以把它理解为将<code>startinfo</code>的地址入栈了。将一个变量或者地址进行入栈，在没有优化的情况下，十有八九就是准备调用函数了。</p>
+<p>接着看下面的语句中，有连续好几个压栈的操作，然后接一个函数调用，最后恢复堆栈：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">mov ecx, dword ptr [HelloWorld2005!_dowildcard]</span><br><span class="line">push ecx</span><br><span class="line">push offset HelloWorld2005!envp</span><br><span class="line">push offset HelloWorld2005!argv</span><br><span class="line">push offset HelloWorld2005!argc</span><br><span class="line">call dword ptr [HelloWorld2005!_imp____getmainargs]</span><br><span class="line">add esp, 14h</span><br></pre></td></tr></table></figure></p>
+<p>当然这些也全部都是全局变量了，不过第一个是将<code>_dowildcard</code>这个变量压栈，下面三个是将<code>envp</code>,<code>argv</code>,<code>argc</code>的内存地址进行压栈，所以你可以把<code>_imp____getmainargs</code>函数看做是下面这个签名：<br><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">void</span> _imp____getmainargs(</span><br><span class="line">    <span class="keyword">void</span>* argc, </span><br><span class="line">    <span class="keyword">void</span>* argv, </span><br><span class="line">    <span class="keyword">void</span>* envp, </span><br><span class="line">    <span class="keyword">int</span> _dowildcard,</span><br><span class="line">    _startupinfo* startinfo)</span><br><span class="line">&#123;</span><br><span class="line"><span class="comment">//.......</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>关于函数调用的参数顺序和入栈顺序以后会安排专题详细分析，这里就当参数是这个顺序吧。而这个函数从名字上来看就是用来初始化参数信息的，和我们的全局变量没有多大的关系，所以就不进去继续看了，直接跳过。</p>
+<p>往下再看几行：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">mov dword ptr [HelloWorld2005!argret], eax</span><br><span class="line">cmp dword ptr [HelloWorld2005!argret], 0</span><br><span class="line">jge HelloWorld2005!pre_cpp_init+0x56</span><br></pre></td></tr></table></figure></p>
+<p>这里eax应该存放了刚刚调用<code>_imp____getmainargs</code>的返回值，之所以把它存放到另外一个全局变量里面，恩，可能是因为没有优化吧= =。这三句概括起来就是将返回值和0进行比较，如果返回值大于等于0（<code>jge</code>的意思就是jump if greater than or equal），那么就跳转到<code>pre_cpp_init+0x56</code>的位置；否则就继续执行。</p>
+<p>还剩下最后一段代码了：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">push 8</span><br><span class="line">call HelloWorld2005!amsg_exit</span><br><span class="line">add esp, 4</span><br></pre></td></tr></table></figure></p>
+<p>这段应该是强迫程序退出的一个函数吧，8是错误码。意思就是说，如果上面的返回值小于0，那么肯定就是程序出现了什么错误了，然后执行到这里就让程序已错误码8的结果退出。</p>
+<p>好了，我们整理一下这个<code>pre_cpp_init</code>函数，其实可以用C++代码表示成下面这个样子：<br><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">pre_cpp_init</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    atexit(&amp;_RTC_Terminate);</span><br><span class="line">    startinfo.newmode = _newmode;</span><br><span class="line">    argret = _imp____getmainargs(&amp;argc, &amp;argv, &amp;envp, _dowildcard, &amp;startinfo);</span><br><span class="line">    <span class="keyword">if</span> (argret &gt;= <span class="number">0</span>)</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line"></span><br><span class="line">    amsg_exit(<span class="number">8</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>虽然可能和真实实现会有不一样，但是大致的流程应该不会错的。</p>
+<p>好吧，分析了半天我们还是没有找到调用<code>SimpleClass</code>构造函数的地方。不要急嘛，函数返回了继续看下去。</p>
+<p>第二次进入<code>call eax</code>，我们这个时候就看到了全局变量k的初始化了，代码如下所示：<br><img src="/2016/04/21/windbg-windbg-chapter3/DynamicInitializerForK.png" title="初始化全局变量K"></p>
+<p>又是人肉分析代码的艰辛历程，前面一大坨就是我们以前熟悉的，先保存上一个堆栈以及寄存器的内容，然后分配一个<code>30h</code>大小局部变量堆栈空间给当前函数（我也不知道函数名叫啥），然后将这块内存初始化为<code>0xCCCCCCCC</code>，下面的这段代码才是真正执行构造函数的地方：<br><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">push <span class="number">0</span>Ch</span><br><span class="line">mov ecx, offset HelloWorld2005!k</span><br><span class="line">call HelloWorld2005!SimpleClass::SimpleClass</span><br></pre></td></tr></table></figure></p>
+<p>这里其实可以看到在调用构造函数之前，编译器已经确定好全局变量<code>k</code>应该存放在什么位置了，而我们调用构造函数只是初始化<code>k</code>这块内存区域而已。这里讲12这个数进行压栈，然后将<code>k</code>的地址保存到<code>ecx</code>寄存器中，我猜ecx保存就一定是this指针！不然构造函数不知道初始化哪片内存。最后我们调用了构造函数。因为这里二进制代码已经写死了调用函数的地址，而不是通过函数名进行调用，所以不存在函数名有二义性的问题。</p>
+<p>我们进入到了构造函数里面，看到如下的代码：<br><img src="/2016/04/21/windbg-windbg-chapter3/SimpleClassConstructorCode.png" title="SimpleClass的构造函数"></p>
+<p>前面里面有一个不同，那就是多了一句<code>push ecx</code>，要知道后面再执行初始化堆栈的时候，需要使用到<code>ecx</code>这个计数器的，而ecx之前保存了this指针的地址，所以说需要先将<code>ecx</code>的值压栈进行保存，这样才能保证this指针地址不会丢失。然后继续往下看，看到<code>pop ecx</code>处，这里就是执行一次出栈操作，恢复<code>ecx</code>中原有的this指针。</p>
+<p>接着函数执行了<code>mov dword ptr [ebp-8], ecx</code>这句话，要知道在没有开优化的情况下，<code>ebp-8</code>这个位置是第一个局部变量声明的位置，也就是说其实构造函数中隐藏了一个定义变量的操作<code>SimpleClass* this = ecx;</code>，所以现在大家知道this指针是怎么来的了吗？它保存在哪里也应该知道了吧。</p>
+<p>继续看，下面一句话是<code>mov eax, dword ptr [ebp-8]</code>，我要掀桌了（(╯‵□′)╯︵┻━┻），好好一个this指针到处传，就不能一步到位么。把桌子摆好，努力思考一下，我觉得将this指针放在局部变量的位置，可能是为了将this指针保存起来，能够随时获取，因为寄存器是经常变化的，一堆操作需要用到寄存器。而把this指针放到寄存器中，则是因为对于<code>dword ptr</code>这种类似于析址操作只支持寄存器的。哎，Intel的指令就是这么麻烦（我感到背后有一股杀气）。</p>
+<p>接下来就开始进行调用初始化器以及调用函数体了：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mov dword ptr [eax], offset HelloWorld2005!SimpleClass::`vftable&apos;</span><br></pre></td></tr></table></figure></p>
+<p>= =天哪，忘记了还有这货，这个看名字就知道是SimpleClass的虚函数表，因为我这里声明了一个虚函数，所以说这个类就会有一个虚函数表来承载虚函数的地址。而这个虚函数表就存放在this指针的基地址的位置。我们现在可以简单瞄一眼虚函数表，利用<code>dd eax</code>可以看到this指针指向内存的内容：<br><img src="/2016/04/21/windbg-windbg-chapter3/SimpleClassThisPointToMemory.png" title="this指针指向的内容"></p>
+<p>第一个值就是虚表的地址了，至于虚拟地址里面存放了什么，我现在还不想研究，等真正讲到虚函数的时候再说吧。</p>
+<p>然后继续往下看：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">mov eax, dword ptr [ebp-8] ;取this指针</span><br><span class="line">mov ecx, dword ptr [ebp+8] ;获取最后一个压栈的参数，这里只有一个就是12</span><br><span class="line">mov dword ptr [eax+4], ecx ;给this指针偏移四个字节的地址进行赋值</span><br></pre></td></tr></table></figure></p>
+<p>前面两个都比较好理解吧，就是单纯的取值，对于最后一个的话，恩，看一看SimpleClass的内存分布大家应该就了解了，输入<code>dt SimpleClass</code>即可：<br><img src="/2016/04/21/windbg-windbg-chapter3/DtSimpleClass.png" title="SimpleClass的内存分布"></p>
+<p>可以很容易看到，对于一个具体的<code>SimpleClass</code>实例，它的基地址存放了虚函数表指针，偏移4字节的地方存放了<code>a</code>变量的值，偏移8字节的地方存放了<code>b</code>变量的值。额最后一个就太奇怪了，它给我们的信息是它存放在一个固定的地址，并且它的类型是(null)，明明是<code>char*</code>好吧。所以它的内存结构用图来表示的话如下：<br><img src="/2016/04/21/windbg-windbg-chapter3/SimpleClassMemoryMap.png" title="SimpleClass的内存结构图"></p>
+<p>最后那个静态变量不管它，讲到它的时候再说。</p>
+<p>所以上面的那句<code>mov dword ptr [eax+4], ecx</code>其实就是给成员变量<code>a</code>进行赋值，所以这三句其实就对应了代码中的初始化器<code>:a(m)</code>了。</p>
+<p>然后在往下看两行：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">mov eax, dowrd ptr [ebp-8]</span><br><span class="line">mov dword ptr [eax+8], 3</span><br></pre></td></tr></table></figure></p>
+<p>不用我说大家也明白了，这个就是给成员变量<code>b</code>进行赋值。</p>
+<p>那么这么一看，其实初始化器和在构造函数体中对变量进行初始化并没有什么区别啊。当然有！最明显的区别就是初始化的顺序，这个顺序后面会用多个例子来进行试验，这里先不说；另外一个区别就是初始化器调用的是构造函数，而函数体中的初始化调用的是赋值操作符，因为这里都是<code>int</code>，所以无法看出区别。</p>
+<p>好了分析完成构造函数了。等等，最后那个<code>ret</code>后面怎么多了个4，以前都是没有的啊。嗯嗯，这里的4只是恢复堆栈用的，这个具体会在函数调用约定里面详细讲解。这里只要知道<code>ret 4</code>其实就相当于下面两条指令就行了:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">ret</span><br><span class="line">add esp, 4</span><br></pre></td></tr></table></figure></p>
+<hr>
+<p>画一个分隔线，只是因为前面讲的太多了，其实这里还有一个问题没有讲清楚，就是那个<code>dynamic initializer for &#39;k&#39;</code>的地址是谁传递过来的，这又是一个坑，还是得填啊。但是我现在不想填，好麻烦= =，留着以后想了解main函数之前做了什么的时候再来看这个坑吧，恩。（我中途发现了这样一个东西<a href="http://wiki.osdev.org/Visual_C%2B%2B_Runtime" target="_blank" rel="noopener">http://wiki.osdev.org/Visual_C%2B%2B_Runtime</a>，打开有兴趣可以参考参考）</p>
+<p>然后不知不觉我们就来到了<code>main</code>函数调用的地方：<br><img src="/2016/04/21/windbg-windbg-chapter3/ThePlaceWhereCallMain.png" title="main函数调用的地放"></p>
+<p>我们仍然可以看一下<code>main</code>函数它完整的函数签名是什么：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">mov eax, dword ptr [HelloWorld2005!envp]</span><br><span class="line">push eax</span><br><span class="line"></span><br><span class="line">mov ecx, dword ptr [HelloWorld2005!argv]</span><br><span class="line">push ecx</span><br><span class="line"></span><br><span class="line">mov edx, dword ptr [HelloWorld2005!argc]</span><br><span class="line">push edx</span><br><span class="line"></span><br><span class="line">call HelloWorld2005!main</span><br></pre></td></tr></table></figure></p>
+<p>可以看到它其实传给main函数三个参数，分别是<code>argc</code>,<code>argv</code>,<code>envp</code>，至于具体什么意思，自己百度一下啦。</p>
+<p>现在我们进入到<code>main</code>函数的主体，并定位到第一句代码执行的位置，如下：<br><img src="/2016/04/21/windbg-windbg-chapter3/MainSimpleClassJ=233.png" title="main函数执行的第一句代码"></p>
+<p>准备数据没啥好说的，将<code>0E9h</code>(也就是233)进行压栈，然后将变量<code>j</code>的栈上地址，也就是this指针的值传递给<code>SimpleClass</code>的构造函数：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">push 0E9h</span><br><span class="line">lea ecx, [ebp-1Ch]</span><br><span class="line">call HelloWorld2005!SimpleClass::SimpleClass</span><br></pre></td></tr></table></figure></p>
+<p>这里唯一的问题就是为什么<code>j</code>是保存在那个地址上，我们来算嘛。首先我们根据上面各种语句，可以得到当前函数局部堆栈的内存分布图如下：<br><img src="/2016/04/21/windbg-windbg-chapter3/MainSimpleClassJ=233Stack.png" title="此时的堆栈情况"></p>
+<p>我把函数参数的区域标为黄色，分配给变量j的内存标为红色。好吧，这样看来没优化的时候，系统真的是有浪费4字节内存的习惯。</p>
+<p>然后代码就开始调用<code>SimpleClass</code>构造函数了，如此看来单参数构造函数的调用，下面两种调用方法所生成的汇编代码是相同的（此处只针对了系统内置类型，结构体的之后再验证）：<br><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">SimpleClass <span class="title">a</span><span class="params">(<span class="number">10</span>)</span></span>;</span><br><span class="line">SimpleClass b = <span class="number">10</span>;</span><br></pre></td></tr></table></figure></p>
+<p>构造函数已经详细分析过了，所以就不进去继续看了。</p>
+<p>看下一句代码<code>SimpleClass k = ::k;</code>，这个从C++的层面来看的话，他应该调用我写的拷贝构造函数才对，那么我们来看对应的汇编代码吧：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">push offset HelloWorld2005!k</span><br><span class="line">lea ecx, [ebp-30h]</span><br><span class="line">call HelloWorld2005!SimpleClass::SimpleClass</span><br></pre></td></tr></table></figure></p>
+<p>额，它好像没有对局部变量和全局变量进行直接的区分，因为，编译器TM就没有给局部变量取名字！！！局部变量是没有符号的。好吧，我的哪个局部变量和全局变量什么区别的问题就不是问题了。至于分配内存我也就不说了。这里主要就说明一下<code>SimpleClass</code>的拷贝构造函数好了：<br><img src="/2016/04/21/windbg-windbg-chapter3/SimpleClassCopyConstructorCode.png" title="拷贝构造函数"></p>
+<p>我们直接跳到<code>004011b3</code>这一行<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">mov eax, dword ptr [ebp-8]</span><br><span class="line">mov dword ptr [eax], offset HelloWorld2005!SimpleClass::`vftable&apos;</span><br><span class="line"></span><br><span class="line">mov eax, dword ptr [ebp-8] ; 拿到this指针</span><br><span class="line">mov ecx, dword ptr [ebp+8] ; 拿到全局变量k的地址</span><br><span class="line">mov edx, dword ptr [ecx+4] ; edx = k.a</span><br><span class="line">mov dword ptr [eax+4], edx ; this.a = edx</span><br><span class="line"></span><br><span class="line">mov eax, dword ptr [ebp-8] ; 拿到this指针</span><br><span class="line">mov ecx, dword ptr [ebp+8] ; 拿到全局变量k的地址</span><br><span class="line">mov edx, dword ptr [ecx+8] ; edx = k.b</span><br><span class="line">mov dword ptr [eax+8], edx ; this.b = edx</span><br><span class="line"></span><br><span class="line">mov eax, dword ptr [ebp-8]</span><br></pre></td></tr></table></figure></p>
+<p>= =好复杂的感觉，一句一句分析，此时<code>ebp-8</code>中保存的就是this指针的值。然后前面两句的意思就是初始化this指针的虚函数表，没有任何疑问。</p>
+<p>接下来的四句，因为在调用拷贝构造函数之前调用了一句<code>push offset HelloWorld2005!k</code>，所以现在上一个堆栈的顶部保存的其实就是全局变量<code>k</code>的地址。所以这里<code>mov ecx, dword ptr [ebp+8]</code>就是讲全局变量<code>k</code>的地址保存到<code>ecx</code>寄存器中。所以有了上面的注释之后基本上就不需要我讲解了。拷贝构造函数搞定！</p>
+<p>再往下看<code>Simple Class a(k)</code>的汇编代码：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">lea     eax, [ebp-30h]  ; 将局部变量k的地址保存到eax</span><br><span class="line">push    eax             ; 将eax的值压栈</span><br><span class="line">lea     ecx, [ebp-44h]  ; 分配局部变量内存，从ebp-44h开始的12个字节</span><br><span class="line">call    HelloWorld2005!SimpleClass:SimpleClass  ;调用拷贝构造函数</span><br></pre></td></tr></table></figure></p>
+<p>不解释，依然和上面的构造过程一模一样。所以其实拷贝构造函数的调用下面两种方式也是完全相同的：<br><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">SimpleClass a = k;</span><br><span class="line"><span class="function">SimpleClass <span class="title">b</span><span class="params">(k)</span></span>;</span><br></pre></td></tr></table></figure></p>
+<hr>
+<p>一个华丽的分割线之后，开始看函数的调用，我们这里主要是看各个函数之间的区别，对于函数主体，我们其实并不关注，看前面两个函数:<br><img src="/2016/04/21/windbg-windbg-chapter3/MainCompareTestAndTestConst.png" title="比较const和非const函数"></p>
+<p>他们几乎完全一样，通过ecx传递指针，然后调用对应的函数，const函数最后的const修饰符可以说是没有起到任何作用，要知道这个const是用来修饰this指针的，也就是说const成员函数中你不能对this指针指向的成员进行修改。但是就如同我上一章里面说的，const只是从语义上让你能够在编译期就能发现问题，要知道编译期找bug的代价比运行期找bug代价小很多的。</p>
+<p>这一次我们不去看它真正的实现，我们不如自己来写一个TestMemberFunc出来？<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">push ebp        ; 保存上一个堆栈的基地址</span><br><span class="line">mov ebp, esp    ; 确定新的堆栈基地址</span><br><span class="line">sub esp, 0C0h   ; 分配足够的堆栈，其实我觉得这里没有用到堆栈啊，可以不用这一步</span><br><span class="line">push xxx        ; 忘记是啥</span><br><span class="line">push xxx        ; 忘记是啥</span><br><span class="line">push xxx        ; 忘记是啥</span><br><span class="line">push ecx        ; 保存this指针</span><br><span class="line">; 初始化这块堆栈区域，忘记什么命令了</span><br><span class="line">pop ecx         ; 恢复this指针</span><br><span class="line">mov dword ptr [ebp-8], ecx ; 将this指针保存到栈底</span><br><span class="line">mov eax, dword ptr [ebp-8] ; 将this指针拷贝到eax中</span><br><span class="line">mov ecx, dword ptr [eax+4] ; 拿到a的值</span><br><span class="line">add ecx, dword ptr [eax+8] ; 加上b的值</span><br><span class="line">mov dword ptr [eax+4], ecx ; 将得到的和保存到a的位置中</span><br><span class="line">pop xxx</span><br><span class="line">pop xxx</span><br><span class="line">pop xxx </span><br><span class="line">mov esp, ebp</span><br><span class="line">pop ebp</span><br><span class="line">ret</span><br></pre></td></tr></table></figure></p>
+<p>我觉得差不多应该是这个样子，不管那么多了。这个只是一个我自己想做的一个练习而已，继续往下面执行。</p>
+<p>接着就是虚函数，汇编代码如下图所示:<br><img src="/2016/04/21/windbg-windbg-chapter3/MainCallTestVirtual.png" title="调用虚函数"></p>
+<p>好像我还是觉得没什么特别的地方，通过<code>push</code>传递参数，通过<code>ecx</code>传递this指针，进去函数实现的地方看也和普通函数的调用没有什么区别。好吧，可能要等到用到继承的时候才会出现区别吧。</p>
+<p>所以在这种没有继承的情况下，成员函数，const成员函数和虚函数之间完全是没有任何区别的。</p>
+<p>看完最后一个<code>int d = SimpleClass::TestStatic(12, 13)</code>就可以解放了，相信看了汇编代码的人会觉得，这个函数是最没有技术含量的了：<br><img src="/2016/04/21/windbg-windbg-chapter3/MainCallTestStatic.png" title="调用静态函数"></p>
+<p>简单来说就和普通的全局函数是一模一样的，唯一的区别就是静态函数前面要加一个类名加一个域操作符。</p>
+<p>啊！终于都分析完了。“诶，好像还有一个静态成员变量你还没说吧？”，我。。。。。。你这个同学记性能不能放差一点，我现在好累了= =</p>
+<p>好的，之前我们用<code>dt</code>命令查看了<code>SimpleClass</code>的内存结构，我们再看一下：<br><img src="/2016/04/21/windbg-windbg-chapter3/DtSimpleClass.png" title="SimpleClass的内存结构"></p>
+<p>发现str的地址并不是一个偏移量，而是一个固定的地址<code>00406000</code>，记住这个是<code>str</code>变量保存的地址，而不是<code>&quot;joker&quot;</code>这个字符串的地址。如果要确定它指向字符串的地址，那么就输入<code>dd 0040600</code>：<br><img src="/2016/04/21/windbg-windbg-chapter3/dd00406000.png" title="str指向的内存内容"></p>
+<p>拿到第一个值，这个值就是<code>&quot;joker&quot;</code>存放的地址了，继续输入<code>da 0040412c</code>（<code>da</code>的意思应该是dump ansi）：<br><img src="/2016/04/21/windbg-windbg-chapter3/da0040412c.png" title="查看str指向的字符串"></p>
+<p>好吧，既然讲到静态变量了，那么我问大家一个问题，静态变量存放在程序的什么区段：</p>
+<ol>
+<li>text段</li>
+<li>rdata段</li>
+<li>data段</li>
+<li>rsrc段</li>
+</ol>
+<p>能搞明白么？好吧，为了寻找这个问题的答案，我们不妨打印出这个程序所有的头部信息吧。利用<code>dh! -s HelloWorld2005</code>（dh的意思是表示dump header,-s表示只展示区段信息）<br><img src="/2016/04/21/windbg-windbg-chapter3/DumpHelloWorldHeaders.png" title="程序的头部区段信息"></p>
+<p>但是这里所有的数据都是相对于HelloWorld2005.exe最开始的地方，<br><img src="/2016/04/21/windbg-windbg-chapter3/lmvmHelloWorld2005.png" title="HelloWorld2005.exe在程序中的真实地址范围"></p>
+<p>那这样的话我们就能确认到各个区段的实际内存范围：<br><figure class="highlight maxima"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">text段       <span class="number">00401000</span>~<span class="number">0040313C</span></span><br><span class="line">rdata段      <span class="number">00404000</span>~<span class="number">0040515C</span></span><br><span class="line">data段       <span class="number">00406000</span>~<span class="number">00406418</span></span><br><span class="line">rsrc段       <span class="number">00407000</span>~<span class="number">004071B4</span></span><br></pre></td></tr></table></figure></p>
+<p>先来看<code>str</code>变量的地址，是<code>00406000</code>，它好像正好就是data段的起始地址，毫无疑问了那就，静态成员变量被存放在data段中。</p>
+<p>我们再来看看<code>&quot;joker&quot;</code>这个字符串，它的地址是<code>0040412C</code>，而这个地址落在了rdata段中。我们不妨把rdata段中的所有的字符串都列举出来，眼见为实。我们可以用<code>s -sa HelloWorld2005+4000 L115C</code>命令来搜索这个rdata内存区间里面所有的ANSI字符串，我这里输出的结果如下：<br><img src="/2016/04/21/windbg-windbg-chapter3/s-saHelloWorld2005+4000L115C.png" title="rdata段中的所有ANSI字符串"></p>
+<p>毫无悬念你可以找到<code>&quot;joker&quot;</code>这个字符串。</p>
+<p>好了这些就把所有的东西都讲完了，遗留下来的坑，下一个章节会填完。大家慢慢消化吧，拜拜！</p>
+<h2 id="回顾："><a href="#回顾：" class="headerlink" title="回顾："></a>回顾：</h2><h3 id="关于WinDBG"><a href="#关于WinDBG" class="headerlink" title="关于WinDBG"></a>关于WinDBG</h3><ol>
+<li><code>dv</code>命令用于查看局部变量，如果想查看全局变量记得前面加上<code>模块名!</code></li>
+<li><code>dt</code>命令用于查看结构体的分布情况，也可以以结构体来解析对应的内存</li>
+<li><code>!dh</code>命令可以用于查看模块的头部信息，具体参数请自行补充</li>
+<li><code>s</code>命令可以用于搜索内存，具体参数请自行补充</li>
+</ol>
+<h3 id="关于汇编"><a href="#关于汇编" class="headerlink" title="关于汇编"></a>关于汇编</h3><ol>
+<li><code>ret 4</code>指令在返回的同时，也会将栈顶指针加4（清空堆栈）</li>
+<li>在调用类函数的时候，包括构造函数，通过<code>ecx</code>寄存器传递this指针，并在函数内部，将this指针的值保存在<code>ebp-8</code>的位置</li>
+</ol>
+<h3 id="关于C"><a href="#关于C" class="headerlink" title="关于C++"></a>关于C++</h3><ol>
+<li>全局变量在是main函数之前初始化的</li>
+<li>全局变量的内存是在编译期就已经被决定了的</li>
+<li>类的虚函数表是在构造函数中进行初始化的</li>
+<li>虚函数表放在this指针指向的基地址位置</li>
+<li>const成员函数和非const成员函数在实现上并没有任何不同，只是便于编译器能够在编译期就把问题抛出来</li>
+<li>在没有继承的情况下，成员函数和虚函数并没有什么不同</li>
+<li>静态函数和普通函数也没有什么不同，只是静态函数调用的时候需要加上类名加上域作用符</li>
+<li>静态成员变量存放在<code>data</code>区段</li>
+<li>常量字符串存放在<code>rdata</code>区段</li>
+<li>main函数的完整签名是int main(int argc, char<strong> argv, char</strong> envp);</li>
+<li>函数入口并不存放在类的结构中</li>
+</ol>
+
+      
+    </div>
+
+    <div>
+      
+        
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/c/" rel="tag">#c++</a>
+          
+            <a href="/tags/windbg/" rel="tag">#windbg</a>
+          
+            <a href="/tags/disassembly/" rel="tag">#disassembly</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2016/04/20/windbg-windbg-chapter2/" rel="next" title="WinDBG观世界（二）">
+                <i class="fa fa-chevron-left"></i> WinDBG观世界（二）
+              </a>
+            
+          </div>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2016/04/26/windbg-windbg-chapter4/" rel="prev" title="WinDBG观世界（四）">
+                WinDBG观世界（四） <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+      <div id="disqus_thread">
+        <noscript>
+          Please enable JavaScript to view the
+          <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a>
+        </noscript>
+      </div>
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel ">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.jpg"
+               alt="云064" />
+          <p class="site-author-name" itemprop="name">云064</p>
+          <p class="site-description motion-element" itemprop="description">天道酬勤</p>
+        </div>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">11</span>
+              <span class="site-state-item-name">posts</span>
+            </a>
+          </div>
+
+          
+            <div class="site-state-item site-state-categories">
+              <a href="/categories">
+                <span class="site-state-item-count">4</span>
+                <span class="site-state-item-name">categories</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">10</span>
+                <span class="site-state-item-name">tags</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/cloudy064" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="http://weibo.com/1954466480" target="_blank" title="weibo">
+                  
+                    <i class="fa fa-fw fa-globe"></i>
+                  
+                  weibo
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+      </section>
+
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+            
+              
+            
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#导言"><span class="nav-text">导言</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#给结构体加上一点控制！再加上一点函数！"><span class="nav-text">给结构体加上一点控制！再加上一点函数！</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#回顾："><span class="nav-text">回顾：</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#关于WinDBG"><span class="nav-text">关于WinDBG</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#关于汇编"><span class="nav-text">关于汇编</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#关于C"><span class="nav-text">关于C++</span></a></li></ol></li></ol></div>
+            
+          </div>
+        </section>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy;  2016 - 
+  <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">云064</span>
+</div>
+
+<div class="powered-by">
+  Powered by <a class="theme-link" href="http://hexo.io">Hexo</a>
+</div>
+
+<div class="theme-info">
+  Theme -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Mist
+  </a>
+</div>
+
+        
+
+<div class="busuanzi-count">
+
+  <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="site-uv"><i class="fa fa-user"></i><span class="busuanzi-value" id="busuanzi_value_site_uv"></span></span>
+  
+
+  
+    <span class="site-pv"><i class="fa fa-eye"></i><span class="busuanzi-value" id="busuanzi_value_site_pv"></span></span>
+  
+  
+</div>
+
+
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/vendors/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.0.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.0.1"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.0.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.0.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.0.1"></script>
+
+
+
+  
+
+
+
+  
+
+    <script type="text/javascript">
+      var disqus_shortname = 'cloudy064';
+      var disqus_identifier = '2016/04/21/windbg-windbg-chapter3/';
+      var disqus_title = "WinDBG观世界（三）";
+      var disqus_url = 'https://cloudy064.github.io/2016/04/21/windbg-windbg-chapter3/';
+
+      function run_disqus_script(disqus_script){
+        var dsq = document.createElement('script');
+        dsq.type = 'text/javascript';
+        dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/' + disqus_script;
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+      }
+
+      run_disqus_script('count.js');
+      
+        run_disqus_script('embed.js');
+      
+    </script>
+  
+
+
+
+
+  
+  
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length == 0) {
+       search_path = "search.xml";
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    function proceedsearch() {
+      $("body").append('<div class="popoverlay">').css('overflow', 'hidden');
+      $('.popup').toggle();
+
+    }
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+    'use strict';
+    $.ajax({
+        url: path,
+        dataType: "xml",
+        async: true,
+        success: function( xmlResponse ) {
+            // get the contents from search data
+            isfetched = true;
+            $('.popup').detach().appendTo('.header-inner');
+            var datas = $( "entry", xmlResponse ).map(function() {
+                return {
+                    title: $( "title", this ).text(),
+                    content: $("content",this).text(),
+                    url: $( "url" , this).text()
+                };
+            }).get();
+            var $input = document.getElementById(search_id);
+            var $resultContent = document.getElementById(content_id);
+            $input.addEventListener('input', function(){
+                var matchcounts = 0;
+                var str='<ul class=\"search-result-list\">';                
+                var keywords = this.value.trim().toLowerCase().split(/[\s\-]+/);
+                $resultContent.innerHTML = "";
+                if (this.value.trim().length > 1) {
+                // perform local searching
+                datas.forEach(function(data) {
+                    var isMatch = true;
+                    var content_index = [];
+                    var data_title = data.title.trim().toLowerCase();
+                    var data_content = data.content.trim().replace(/<[^>]+>/g,"").toLowerCase();
+                    var data_url = data.url;
+                    var index_title = -1;
+                    var index_content = -1;
+                    var first_occur = -1;
+                    // only match artiles with not empty titles and contents
+                    if(data_title != '' && data_content != '') {
+                        keywords.forEach(function(keyword, i) {
+                            index_title = data_title.indexOf(keyword);
+                            index_content = data_content.indexOf(keyword);
+                            if( index_title < 0 && index_content < 0 ){
+                                isMatch = false;
+                            } else {
+                                if (index_content < 0) {
+                                    index_content = 0;
+                                }
+                                if (i == 0) {
+                                    first_occur = index_content;
+                                }
+                            }
+                        });
+                    }
+                    // show search results
+                    if (isMatch) {
+                        matchcounts += 1;
+                        str += "<li><a href='"+ data_url +"' class='search-result-title'>"+ data_title +"</a>";
+                        var content = data.content.trim().replace(/<[^>]+>/g,"");
+                        if (first_occur >= 0) {
+                            // cut out 100 characters
+                            var start = first_occur - 20;
+                            var end = first_occur + 80;
+                            if(start < 0){
+                                start = 0;
+                            }
+                            if(start == 0){
+                                end = 50;
+                            }
+                            if(end > content.length){
+                                end = content.length;
+                            }
+                            var match_content = content.substring(start, end);
+                            // highlight all keywords
+                            keywords.forEach(function(keyword){
+                                var regS = new RegExp(keyword, "gi");
+                                match_content = match_content.replace(regS, "<b class=\"search-keyword\">"+keyword+"</b>");
+                            });
+                            
+                            str += "<p class=\"search-result\">" + match_content +"...</p>"
+                        }
+                        str += "</li>";
+                    }
+                })};
+                str += "</ul>";
+                if (matchcounts == 0) { str = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>' }
+                if (keywords == "") { str = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>' }
+                $resultContent.innerHTML = str;
+            });
+            proceedsearch();
+        }
+    });}
+
+    // handle and trigger popup window;
+    $('.popup-trigger').mousedown(function(e) {
+      e.stopPropagation();
+      if (isfetched == false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+
+    });
+
+    $('.popup-btn-close').click(function(e){
+      $('.popup').hide();
+      $(".popoverlay").remove();
+      $('body').css('overflow', '');
+    });
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+  </script>
+
+  
+  <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      tex2jax: {
+        inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+        processEscapes: true,
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+      }
+    });
+  </script>
+
+  <script type="text/x-mathjax-config">
+    MathJax.Hub.Queue(function() {
+      var all = MathJax.Hub.getAllJax(), i;
+      for (i=0; i < all.length; i += 1) {
+        all[i].SourceElement().parentNode.className += ' has-jax';
+      }
+    });
+  </script>
+  <script type="text/javascript" src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+
+  
+
+  
+  <script src="https://cdn1.lncld.net/static/js/av-core-mini-0.6.1.js"></script>
+  <script>AV.initialize("XrsYXlxfuX3wP1oGGq5JHS1T-gzGzoHsz", "ssoUH5gCLxwRkjdBQtCpRCoQ");</script>
+  <script>
+    function showTime(Counter) {
+      var query = new AV.Query(Counter);
+      var entries = [];
+      var $visitors = $(".leancloud_visitors");
+
+      $visitors.each(function () {
+        entries.push( $(this).attr("id").trim() );
+      });
+
+      query.containedIn('url', entries);
+      query.find()
+        .done(function (results) {
+          var COUNT_CONTAINER_REF = '.leancloud-visitors-count';
+
+          if (results.length === 0) {
+            $visitors.find(COUNT_CONTAINER_REF).text(0);
+            return;
+          }
+
+          for (var i = 0; i < results.length; i++) {
+            var item = results[i];
+            var url = item.get('url');
+            var time = item.get('time');
+            var element = document.getElementById(url);
+
+            $(element).find(COUNT_CONTAINER_REF).text(time);
+          }
+          for(var i = 0; i < entries.length; i++) {
+            var url = entries[i];
+            var element = document.getElementById(url);
+            var countSpan = $(element).find(COUNT_CONTAINER_REF);
+            if( countSpan.text() == '') {
+              countSpan.text(0);
+            }
+          }
+        })
+        .fail(function (object, error) {
+          console.log("Error: " + error.code + " " + error.message);
+        });
+    }
+
+    function addCount(Counter) {
+      var $visitors = $(".leancloud_visitors");
+      var url = $visitors.attr('id').trim();
+      var title = $visitors.attr('data-flag-title').trim();
+      var query = new AV.Query(Counter);
+
+      query.equalTo("url", url);
+      query.find({
+        success: function(results) {
+          if (results.length > 0) {
+            var counter = results[0];
+            counter.fetchWhenSave(true);
+            counter.increment("time");
+            counter.save(null, {
+              success: function(counter) {
+                var $element = $(document.getElementById(url));
+                $element.find('.leancloud-visitors-count').text(counter.get('time'));
+              },
+              error: function(counter, error) {
+                console.log('Failed to save Visitor num, with error message: ' + error.message);
+              }
+            });
+          } else {
+            var newcounter = new Counter();
+            /* Set ACL */
+            var acl = new AV.ACL();
+            acl.setPublicReadAccess(true);
+            acl.setPublicWriteAccess(true);
+            newcounter.setACL(acl);
+            /* End Set ACL */
+            newcounter.set("title", title);
+            newcounter.set("url", url);
+            newcounter.set("time", 1);
+            newcounter.save(null, {
+              success: function(newcounter) {
+                var $element = $(document.getElementById(url));
+                $element.find('.leancloud-visitors-count').text(newcounter.get('time'));
+              },
+              error: function(newcounter, error) {
+                console.log('Failed to create');
+              }
+            });
+          }
+        },
+        error: function(error) {
+          console.log('Error:' + error.code + " " + error.message);
+        }
+      });
+    }
+
+    $(function() {
+      var Counter = AV.Object.extend("Counter");
+      if ($('.leancloud_visitors').length == 1) {
+        addCount(Counter);
+      } else if ($('.post-title-link').length > 1) {
+        showTime(Counter);
+      }
+    });
+  </script>
+
+
+
+  
+<script type="text/javascript" async src="//push.zhanzhang.baidu.com/push.js">
+</script>
+
+
+</body>
+</html>

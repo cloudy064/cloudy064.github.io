@@ -1,0 +1,1069 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/vendors/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/vendors/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.0.1" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="c++,windbg,disassembly," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="Binary World" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.0.1" />
+
+
+
+
+
+
+<meta name="description" content="内容概要前面一章在探究类的时候，遗留了很多问题，比如参数的构造顺序，虚函数的调用实现等等，那么这一章的就是来填这些坑的。当然这一章不会把这些坑都填完，因为类里面需要讲的东西实在是太多了。那么我先把这一章里面需要既觉得几个问题都罗列出来吧：  如果我在构造函数中调用虚函数，会执行到正确的（或者说我们所希望的）虚函数么 构造函数成员初始化的顺序 在子类中，父类的数据被放在什么地方 普通成员覆盖和虚函数">
+<meta name="keywords" content="c++,windbg,disassembly">
+<meta property="og:type" content="article">
+<meta property="og:title" content="WinDBG观世界（四）">
+<meta property="og:url" content="https://cloudy064.github.io/2016/04/26/windbg-windbg-chapter4/index.html">
+<meta property="og:site_name" content="Binary World">
+<meta property="og:description" content="内容概要前面一章在探究类的时候，遗留了很多问题，比如参数的构造顺序，虚函数的调用实现等等，那么这一章的就是来填这些坑的。当然这一章不会把这些坑都填完，因为类里面需要讲的东西实在是太多了。那么我先把这一章里面需要既觉得几个问题都罗列出来吧：  如果我在构造函数中调用虚函数，会执行到正确的（或者说我们所希望的）虚函数么 构造函数成员初始化的顺序 在子类中，父类的数据被放在什么地方 普通成员覆盖和虚函数">
+<meta property="og:locale" content="en">
+<meta property="og:image" content="https://cloudy064.github.io/2016/04/26/windbg-windbg-chapter4/AssignMemberFuncPointer.png">
+<meta property="og:image" content="https://cloudy064.github.io/2016/04/26/windbg-windbg-chapter4/FirstClassVariable.png">
+<meta property="og:image" content="https://cloudy064.github.io/2016/04/26/windbg-windbg-chapter4/TestBaseConstructor.png">
+<meta property="og:image" content="https://cloudy064.github.io/2016/04/26/windbg-windbg-chapter4/TestBaseVirtualFunctionsAddress.png">
+<meta property="og:image" content="https://cloudy064.github.io/2016/04/26/windbg-windbg-chapter4/TestBaseLookupThis.png">
+<meta property="og:image" content="https://cloudy064.github.io/2016/04/26/windbg-windbg-chapter4/TestBaseContentOfVirtualTable.png">
+<meta property="og:image" content="https://cloudy064.github.io/2016/04/26/windbg-windbg-chapter4/dtTestBase.png">
+<meta property="og:image" content="https://cloudy064.github.io/2016/04/26/windbg-windbg-chapter4/TestBaseInitSequence.png">
+<meta property="og:image" content="https://cloudy064.github.io/2016/04/26/windbg-windbg-chapter4/TestBaseVirtualFunc2Function.png">
+<meta property="og:image" content="https://cloudy064.github.io/2016/04/26/windbg-windbg-chapter4/TestDeriveConstructor.png">
+<meta property="og:image" content="https://cloudy064.github.io/2016/04/26/windbg-windbg-chapter4/dtTestDerive.png">
+<meta property="og:image" content="https://cloudy064.github.io/2016/04/26/windbg-windbg-chapter4/TestDeriveAfterAssignVftable.png">
+<meta property="og:image" content="https://cloudy064.github.io/2016/04/26/windbg-windbg-chapter4/TestDeriveVtableContent.png">
+<meta property="og:image" content="https://cloudy064.github.io/2016/04/26/windbg-windbg-chapter4/TestDeriveVirtualFunctionAddress.png">
+<meta property="og:image" content="https://cloudy064.github.io/2016/04/26/windbg-windbg-chapter4/NormalFunc1Addresses.png">
+<meta property="og:image" content="https://cloudy064.github.io/2016/04/26/windbg-windbg-chapter4/TestBaseVcall0.png">
+<meta property="og:updated_time" content="2018-06-27T15:38:33.300Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="WinDBG观世界（四）">
+<meta name="twitter:description" content="内容概要前面一章在探究类的时候，遗留了很多问题，比如参数的构造顺序，虚函数的调用实现等等，那么这一章的就是来填这些坑的。当然这一章不会把这些坑都填完，因为类里面需要讲的东西实在是太多了。那么我先把这一章里面需要既觉得几个问题都罗列出来吧：  如果我在构造函数中调用虚函数，会执行到正确的（或者说我们所希望的）虚函数么 构造函数成员初始化的顺序 在子类中，父类的数据被放在什么地方 普通成员覆盖和虚函数">
+<meta name="twitter:image" content="https://cloudy064.github.io/2016/04/26/windbg-windbg-chapter4/AssignMemberFuncPointer.png">
+
+
+
+<script type="text/javascript" id="hexo.configuration">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    scheme: 'Mist',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: 0,
+      author: 'Author'
+    }
+  };
+</script>
+
+
+
+
+  <link rel="canonical" href="https://cloudy064.github.io/2016/04/26/windbg-windbg-chapter4/"/>
+
+  <title> WinDBG观世界（四） | Binary World </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="en">
+
+  
+
+
+
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?1ea1b41881eac9926d58af6b5fc9b354";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">Binary World</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle">cloudy066</p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            Categories
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archives
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="#" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br />
+            
+            Search
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup">
+ <span class="search-icon fa fa-search"></span>
+ <input type="text" id="local-search-input">
+ <div id="local-search-result"></div>
+ <span class="popup-btn-close">close</span>
+</div>
+
+
+    </div>
+  
+</nav>
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                WinDBG观世界（四）
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">Posted on</span>
+            <time itemprop="dateCreated" datetime="2016-04-26T12:22:37+08:00" content="2016-04-26">
+              2016-04-26
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp;
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/windbg/" itemprop="url" rel="index">
+                    <span itemprop="name">windbg</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                &nbsp; | &nbsp;
+                <a href="/2016/04/26/windbg-windbg-chapter4/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2016/04/26/windbg-windbg-chapter4/" itemprop="commentsCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+          
+          
+             <span id="/2016/04/26/windbg-windbg-chapter4/" class="leancloud_visitors" data-flag-title="WinDBG观世界（四）">
+               &nbsp; | &nbsp;
+               <span class="post-meta-item-icon">
+                 <i class="fa fa-eye"></i>
+               </span>
+               <span class="post-meta-item-text">visitors </span>
+               <span class="leancloud-visitors-count"></span>
+              </span>
+          
+
+          
+              &nbsp; | &nbsp;
+              <span class="page-pv"><i class="fa fa-file-o"></i>
+              <span class="busuanzi-value" id="busuanzi_value_page_pv" ></span>
+              </span>
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="内容概要"><a href="#内容概要" class="headerlink" title="内容概要"></a>内容概要</h2><p>前面一章在探究类的时候，遗留了很多问题，比如参数的构造顺序，虚函数的调用实现等等，那么这一章的就是来填这些坑的。当然这一章不会把这些坑都填完，因为类里面需要讲的东西实在是太多了。那么我先把这一章里面需要既觉得几个问题都罗列出来吧：</p>
+<ol>
+<li>如果我在构造函数中调用虚函数，会执行到正确的（或者说我们所希望的）虚函数么</li>
+<li>构造函数成员初始化的顺序</li>
+<li>在子类中，父类的数据被放在什么地方</li>
+<li>普通成员覆盖和虚函数重写有什么区别</li>
+<li>虚函数重写之后，子类的虚函数表会发生什么变化</li>
+<li>发生继承时，子类是会完全复制父类的虚函数表，还是只会将自己类中的虚函数写入表中</li>
+<li>通过函数指针进行调用和直接调用成员函数有什么区别</li>
+<li>父类能够通过成员函数指针来调用子类的普通成员函数和虚函数么</li>
+<li>子类能够通过成员函数指针来调用父类的普通成员函数和虚函数么<a id="more"></a>
+<h2 id="执行哪个函数？运行的时候才知道啊！"><a href="#执行哪个函数？运行的时候才知道啊！" class="headerlink" title="执行哪个函数？运行的时候才知道啊！"></a>执行哪个函数？运行的时候才知道啊！</h2>本章进行分析的代码内容如下：<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">TestBase</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    TestBase()</span><br><span class="line">        : e(<span class="number">12</span>)</span><br><span class="line">        , c(<span class="number">3</span>)</span><br><span class="line">        , a(<span class="number">12</span>)</span><br><span class="line">        , b(<span class="number">1</span>)</span><br><span class="line">        , f(<span class="string">'l'</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        d = <span class="number">19</span>;</span><br><span class="line"></span><br><span class="line">        VirtualFunc1();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    ~TestBase()</span><br><span class="line">    &#123;</span><br><span class="line">        a = <span class="number">12</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="function"><span class="keyword">virtual</span> <span class="keyword">void</span> <span class="title">VirtualFunc1</span><span class="params">()</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        a += <span class="number">12</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">virtual</span> <span class="keyword">void</span> <span class="title">VirtualFunc2</span><span class="params">()</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        b += <span class="number">22</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">NormalFunc1</span><span class="params">()</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        c += <span class="number">14</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">protected</span>:</span><br><span class="line">    <span class="keyword">int</span> a;</span><br><span class="line">    <span class="keyword">int</span> b;</span><br><span class="line">    <span class="keyword">char</span> c;</span><br><span class="line">    <span class="keyword">char</span> d;</span><br><span class="line">    <span class="keyword">short</span> e;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">    <span class="keyword">char</span> f;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">TestDerive</span> </span></span><br><span class="line"><span class="class">    :</span> <span class="keyword">public</span> TestBase</span><br><span class="line">&#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    TestDerive(<span class="keyword">int</span> a)</span><br><span class="line">        : TestBase()</span><br><span class="line">        , f(a)</span><br><span class="line">    &#123;</span><br><span class="line">        VirtualFunc1();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    ~TestDerive()</span><br><span class="line">    &#123;</span><br><span class="line">        b = <span class="number">12</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="function"><span class="keyword">virtual</span> <span class="keyword">void</span> <span class="title">VirtualFunc1</span><span class="params">()</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        a += <span class="number">99</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">NormalFunc1</span><span class="params">()</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        c += <span class="number">54</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">    <span class="keyword">int</span> f;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc, <span class="keyword">char</span>** argv)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">typedef</span> <span class="title">void</span> <span class="params">(TestBase::*BaseNormalFuncType)</span><span class="params">()</span></span>;</span><br><span class="line">    BaseNormalFuncType baseNormalFuncPointer = &amp;TestBase::NormalFunc1;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">typedef</span> <span class="title">void</span> <span class="params">(TestDerive::*DeriveNormalFuncType)</span><span class="params">()</span></span>;</span><br><span class="line">    DeriveNormalFuncType deriveNormalFuncPointer = &amp;TestDerive::NormalFunc1;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">typedef</span> <span class="title">void</span> <span class="params">(TestBase::*BaseVirtualFunc1Type)</span><span class="params">()</span></span>;</span><br><span class="line">    BaseVirtualFunc1Type baseVirtualFunc1Pointer = &amp;TestBase::VirtualFunc1;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">typedef</span> <span class="title">void</span> <span class="params">(TestBase::*BaseVirtualFunc2Type)</span><span class="params">()</span></span>;</span><br><span class="line">    BaseVirtualFunc2Type baseVirtualFunc2Pointer = &amp;TestBase::VirtualFunc2;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">typedef</span> <span class="title">void</span> <span class="params">(TestDerive::*DeriveVirtualFunc1Type)</span><span class="params">()</span></span>;</span><br><span class="line">    DeriveVirtualFunc1Type deriveVirtualFunc1Pointer = &amp;TestDerive::VirtualFunc1;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">typedef</span> <span class="title">void</span> <span class="params">(TestDerive::*DeriveVirtualFunc2Type)</span><span class="params">()</span></span>;</span><br><span class="line">    DeriveVirtualFunc2Type deriveVirtualFunc2Pointer = &amp;TestDerive::VirtualFunc2;</span><br><span class="line"></span><br><span class="line">    TestBase base1;</span><br><span class="line">    base1.NormalFunc1();</span><br><span class="line">    base1.VirtualFunc1();</span><br><span class="line">    base1.VirtualFunc2();</span><br><span class="line"></span><br><span class="line">    <span class="function">TestDerive <span class="title">derive1</span><span class="params">(<span class="number">77</span>)</span></span>;</span><br><span class="line">    derive1.NormalFunc1();</span><br><span class="line">    derive1.VirtualFunc1();</span><br><span class="line">    derive1.VirtualFunc2();</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    (base1.*baseNormalFuncPointer)();</span><br><span class="line">    (derive1.*deriveNormalFuncPointer)();</span><br><span class="line">    (derive1.*baseNormalFuncPointer)();</span><br><span class="line">    </span><br><span class="line">    (base1.*baseVirtualFunc1Pointer)();</span><br><span class="line">    (base1.*baseVirtualFunc2Pointer)();</span><br><span class="line">    </span><br><span class="line">    (derive1.*baseVirtualFunc1Pointer)();</span><br><span class="line">    (derive1.*baseVirtualFunc2Pointer)();</span><br><span class="line"></span><br><span class="line">    (derive1.*deriveVirtualFunc1Pointer)();</span><br><span class="line">    (derive1.*deriveVirtualFunc2Pointer)();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<p>代码确实越来越长了，但是其实分析的内容不是特别多，那么就照旧，打开windbg一步一步来分析代码吧。</p>
+<p>跳过初始化的部分，我们来到第一句代码，诶，为什么<code>typedef void (TestBase::*BaseNormalFuncType)()</code>没有执行啊喂，第一句代码直接运行赋值操作了？<br><img src="/2016/04/26/windbg-windbg-chapter4/AssignMemberFuncPointer.png" title="第一句代码"></p>
+<p>恩，其实我也不知道，而且我google也没有找到答案，咱忽略这个问题好不好？</p>
+<p>那么看下面六个函数指针的赋值吧，前面两个没话说，和普通的函数地址一样，因为经过上一章的研究，其实<code>this</code>指针并不是类内部或者函数内部的，而是函数调用时外部通过<code>ecx</code>寄存器传递给函数的一个隐式参数。（当然如果你想知道函数的地址是怎么得到的，可以等我开一个讲编译器的新坑）那么这里我们主要需要看的是最后四个虚函数的指针的赋值。可以看到它的代码如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">mov dword ptr [ebp-2Ch], offset HelloWorld2005!TestBase::`vcall&apos;&#123;0&#125;&apos;</span><br><span class="line">mov dword ptr [ebp-38h], offset HelloWorld2005!TestBase::`vcall&apos;&#123;4&#125;&apos;</span><br><span class="line">mov dword ptr [ebp-44h], offset HelloWorld2005!TestBase::`vcall&apos;&#123;0&#125;&apos;</span><br><span class="line">mov dword ptr [ebp-50h], offset HelloWorld2005!TestBase::`vcall&apos;&#123;4&#125;&apos;</span><br></pre></td></tr></table></figure></p>
+<p>不对啊喂，我后面两个明明是取的<code>TestDerive</code>中的虚函数，为什么在汇编代码中还是给我<code>TestBase</code>中虚函数的地址啊？好吧，我暂时也无法给你解答，把所有的疑问全部都放一放，然后继续研究吧。</p>
+<p>然后我们开始定义第一个类变量：<br><img src="/2016/04/26/windbg-windbg-chapter4/FirstClassVariable.png" title="定义TestBase变量"></p>
+<p>我们进入到构造函数内部看下吧（这里<code>this</code>指针的值为`0019febc）：<br><img src="/2016/04/26/windbg-windbg-chapter4/TestBaseConstructor.png" title="TestBase的构造函数"></p>
+<p>还记得下面构造函数会做哪些事情吗？</p>
+<ol>
+<li>将<code>this</code>指针放到<code>ebp-8</code>的位置</li>
+<li>将<code>ebp-8</code>位置的值放到<code>eax</code>中</li>
+<li>如果有虚函数，下面就会把虚函数表的地址放到<code>this</code>指针指向的第一个地址</li>
+</ol>
+<p>这一章里面主要研究虚函数表，之所以叫虚函数表，我想应该就是一张表里面有很多的<code>entry</code>，然后每个<code>entry</code>指向了一个对应的虚函数地址吧，好吧这都是我意淫出来的。所以，我们首先用<code>x</code>指令来查看<code>TestBase</code>中所有虚函数的地址是多少：<br><img src="/2016/04/26/windbg-windbg-chapter4/TestBaseVirtualFunctionsAddress.png" title="TestBase中的虚函数"></p>
+<p>然后我们用<code>dd eax</code>来查看<code>this</code>指针指向的内存：<br><img src="/2016/04/26/windbg-windbg-chapter4/TestBaseLookupThis.png" title="this指针指向的内存"></p>
+<p>第一个4字节的值<code>00404130</code>就是虚函数表的地址，我们再用<code>dd 00404130</code>查看这个地址下是不是存放了上面两个虚函数的地址：<br><img src="/2016/04/26/windbg-windbg-chapter4/TestBaseContentOfVirtualTable.png" title="TestBase虚函数表的内容"></p>
+<p>这不是演习，果然后面一个一个存放着虚函数的指针，暂且认为它们是按照声明的顺序来存放的吧，毕竟其实这个顺序如果你不是想<code>hack</code>的话，对于我们来说没什么意义。所以从汇编的层面来看的话，虚函数表其实没啥神奇的。</p>
+<p>好吧，那么我们继续往下面看，需要注意的是，我这里把成员变量声明的顺序和类初始化器的顺序安排成不一致，那么现在我们需要一边看一边关注是在为哪个变量赋值。或者。。。。。我们不妨用<code>dt</code>看下<code>TestBase</code>的内存结构吧：<br><img src="/2016/04/26/windbg-windbg-chapter4/dtTestBase.png" title="TestBase的内存结构"></p>
+<p>额，内存结构里面的内存对齐我觉得可以自己分析，我这里就不多说了。然后就是对照着目标地址和内存结构进行对应了：<br><img src="/2016/04/26/windbg-windbg-chapter4/TestBaseInitSequence.png" title="TestBase成员变量初始化顺序"></p>
+<p>诶，好像和我在初始化器里面摆放的顺序不一样，完全就是和成员变量声明的顺序是一致的，当然除了最后一个在函数体中进行的一次赋值。这样的话概要中的第二个问题就已经解决了。</p>
+<p>接着下面调用了一个虚函数<code>VirtualFunc1</code>，进去看了下好像和我们以前调用的普通函数没有什么区别，那我们就直接跳过吧：<br><img src="/2016/04/26/windbg-windbg-chapter4/TestBaseVirtualFunc2Function.png" title="VirtualFunc1的汇编实现"></p>
+<p>然后我们跳过函数的调用，等下一起看，直接来看下<code>TestDerive</code>对象的定义，进去它的构造函数看下汇编实现（此时<code>this</code>指针的值是<code>0019fe9c</code>）：<br><img src="/2016/04/26/windbg-windbg-chapter4/TestDeriveConstructor.png" title="TestDerive的构造函数"></p>
+<p>在看调用父类构造函数之前，我们继续用<code>dt</code>来看下<code>TestDerive</code>的内存结构：<br><img src="/2016/04/26/windbg-windbg-chapter4/dtTestDerive.png" title="TestDerive的内存结构"></p>
+<p>可以看出，<code>TestDerive</code>是把父类的内存结构拷贝过来（而不是在开始的位置放一个<code>TestBase</code>），然后在最后加上一个<code>TestDerive</code>中定义的变量<code>f</code>，而虚函数表指针也只有一个。根据之前的经验，类会先初始化虚函数表，在进行成员变量的初始化，然而在往下看的过程中，可以看到：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">mov dword ptr [ebp-14h], ecx</span><br><span class="line">mov ecx, dword ptr [ebp-14h]</span><br><span class="line">call HelloWorld2005!TestBase::TestBase</span><br></pre></td></tr></table></figure></p>
+<p>尼玛，为什么这里<code>this</code>指针就存放在了<code>ebp-14h</code>这个位置上，之前都是放在<code>ebp-8</code>的位置的。哎，我觉得我又要画一个此时堆栈的内存图了：<br></p>
+<p>= =，为什么这个构造函数里面又多了这么多东西？说好的只需要初始化堆栈区域呢？至于为什么会多出这么多东西，我暂时也不知道，所以无法给大家解答。那这样的话，加上第一个局部变量都会空出4个字节出来的尿性，这里<code>this</code>指针确实应该放在<code>ebp-14h</code>的位置。</p>
+<p>接着它就开始调用父类构造函数<code>TestBase</code>了。这么一来，虚函数表就肯定是在父类中进行赋值了，所以这样的话，父类中调用的<code>VirtualFunc1</code>肯定也就是<code>TestBase</code>中的<code>VirtualFunc1</code>了。这个我就不跟进去看了，那么现在的问题就是，我在子类中重写了虚函数<code>VirtualFunc1</code>，那么这个虚函数的地址是怎么写入到虚函数表的呢？继续往下看就知道了。</p>
+<p>下面一句<code>mov dword ptr [ebp-4], 0</code>这个我还是没有明白是啥意思，忽略它。主要是下面这两句：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">mov eax, dword ptr [ebp-14h]</span><br><span class="line">mov dword ptr [eax], offset HelloWorld2005!TestDerive::`vftable&apos;</span><br></pre></td></tr></table></figure></p>
+<p>看到这里的动作就是修改<code>this</code>指向的基地址的值，也就是虚表的地址，我们前面拿到的虚函数表的地址是<code>00404130</code>，那我们这里看下它的地址是多少：<br><img src="/2016/04/26/windbg-windbg-chapter4/TestDeriveAfterAssignVftable.png" title="虚函数表的地址"></p>
+<p>可看到这个地址变成了<code>0040413c</code>。那么查看这个地址下的内容：<br><img src="/2016/04/26/windbg-windbg-chapter4/TestDeriveVtableContent.png" title="虚函数表中的内容"></p>
+<p>我们可以来看下是不是正好就是我们虚函数的地址，利用<code>x</code>指令即可：<br><img src="/2016/04/26/windbg-windbg-chapter4/TestDeriveVirtualFunctionAddress.png" title="虚函数地址"></p>
+<p>居然没有输出<code>VirtualFunc2</code>的地址，只能猜测<code>x</code>指令只能输出类中实际实现的函数的地址。但是这里我们仍然可以看到<code>VirtualFunc1</code>的地址明显变成了<code>00401460</code>，正好就是虚函数表中第一个地址。而虚函数表中第二个地址也正好就是父类中<code>VirtualFunc2</code>的地址。所以其实有几个点我们就弄清楚了：</p>
+<ol>
+<li>在构造时会先调用父类的构造函数，并且将父类的虚函数表地址传递给<code>this</code>指针，所以在父类构造函数中仍然可以调用虚函数，但是调用的只是父类中实现的版本</li>
+<li>在父类构造函数返回后，会将子类中的虚函数表地址传递给<code>this</code>指针，也就是会覆盖掉父类的虚函数表地址。所以在此之后，构造函数中调用的虚函数就是子类中的版本了。</li>
+</ol>
+<p>接着往下看到两句<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">mov eax, dword ptr [ebp-14h]    ;获取this指针</span><br><span class="line">mov ecx, dword ptr [ebp+8]      ;拿到传递给构造函数的参数</span><br><span class="line">mov dword ptr [eax+14h], ecx    ;执行f的初始化</span><br></pre></td></tr></table></figure></p>
+<p>加上注释之后也就不需要我解释了，大家都明白的。</p>
+<p>再往下看，疑惑的地方就来了：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">mov eax, dword ptr [ebp-14h]                    ;拿到this指针</span><br><span class="line">call HelloWorld2005!TestDerive::VirtualFunc1    ;调用VirtualFunc1</span><br></pre></td></tr></table></figure></p>
+<p>说好的运行时多态呢？为什么好像在编译期直接就给我确定了调用的地址了？老师教的不是说先查找虚函数表，然后再找到对应的虚函数地址么？好像和我以前知道的有一点偏差。但是我现在也不知道为什么，我暂时理解为编译的优化吧。这里留一个疑问，以后看看能不能解决。</p>
+<p>这时我们回到<code>main</code>函数中继续看那几个函数调用，貌似看起来也都是直接在编译期就决定了函数跳转到哪里了，和普通的函数完全没有区别。是不是被那些将虚函数的书坑了啊？我现在有一点怀疑了。当然不排除怀疑这是微软的特立独行。</p>
+<p>算了，我们继续看下面通过成员函数指针进行的调用，首先是三个普通成员函数，它对应的汇编代码是：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">lea ecx, [ebp-6Ch]</span><br><span class="line">call dword ptr [ebp-14h]</span><br><span class="line"></span><br><span class="line">lea ecx, [ebp-8Ch]</span><br><span class="line">call dword ptr [ebp-20h]</span><br><span class="line"></span><br><span class="line">lea ecx, [ebp-8Ch]</span><br><span class="line">call dword ptr [ebp-14h]</span><br></pre></td></tr></table></figure></p>
+<p>可以看到其实对成员函数指针的调用和平时成员函数的调用没有什么区别，只是把<code>call</code>的函数名变成了一个地址，<code>this</code>指针仍然存放在<code>ecx</code>寄存器中。而且我们可以通过<code>x</code>指令来查看两个普通函数的地址：<br><img src="/2016/04/26/windbg-windbg-chapter4/NormalFunc1Addresses.png" title="NormalFunc1的地址"></p>
+<p>好像在这一块儿并没有任何歧义，因为知道地址对应的函数之后，都很好理解该跳转到哪里，所以我就不多说什么了。接下来</p>
+<p>接着看虚函数，因为之前在前面虚函数地址进行赋值时，看到<code>TestBase</code>的虚函数地址和<code>TestDerive</code>的虚函数地址居然完全一样，这和我们刚刚用<code>x</code>命令看到的不同。好啊吧，闲话少说，首先看第一组，用<code>base1</code>调用<code>baseVirtualFunc1Pointer</code>和<code>baseVirtualFunc2Pointer</code>，对应的汇编代码是：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">lea ecx, [ebp-6Ch]</span><br><span class="line">call dword ptr [ebp-2Ch]</span><br><span class="line"></span><br><span class="line">lea ecx, [ebp-6Ch]</span><br><span class="line">call dword ptr [ebp-38h]</span><br></pre></td></tr></table></figure></p>
+<p>在执行<code>call</code>语句时用<code>F11</code>进入函数内部查看，发现这次调用到的函数不一样了，如下：<br><img src="/2016/04/26/windbg-windbg-chapter4/TestBaseVcall0.png" title="调用虚函数后的结果"></p>
+<p>但是细看的话，其实很简(sha)单(bi)！！！！！因为它就只做了两个操作：</p>
+<ol>
+<li>获取到this指针指向的第一个值（四字节），而这个值正好就是虚函数表的地址</li>
+<li>然后直接对虚函数表指向的第一个函数地址进行一次跳转(<code>jmp</code>)</li>
+</ol>
+<p>额。。。。好像这样做确实能够实现调用到正确的虚函数哦。恩，果然是源码之下，了无秘密。只怪我之前怎么没想到呢= =</p>
+<p>那其实下面的那些虚函数的调用也就不需要我分析了吧，只是调用<code>TestVirtualFunc2</code>的时候，跳转函数里面在虚表的基础上，加了四个字节的偏移。把这里的虚函数调用也理解为做了一个函数的跳转，这个函数跳转中所做的事情就是获取到正确的虚函数地址，而这个虚函数地址的获取依赖于构造对象时，赋值给<code>this</code>指针的虚表地址。</p>
+<p>那么今天的分析就到这里了，大家好好消化一下吧，如果对本系列有什么改进的建议，欢迎找我提出来(<a href="mailto:cloudy064@gmail.com" target="_blank" rel="noopener">cloudy064@gmail.com</a>)</p>
+
+      
+    </div>
+
+    <div>
+      
+        
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/c/" rel="tag">#c++</a>
+          
+            <a href="/tags/windbg/" rel="tag">#windbg</a>
+          
+            <a href="/tags/disassembly/" rel="tag">#disassembly</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2016/04/21/windbg-windbg-chapter3/" rel="next" title="WinDBG观世界（三）">
+                <i class="fa fa-chevron-left"></i> WinDBG观世界（三）
+              </a>
+            
+          </div>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2016/05/02/windbg-windbg-extra1/" rel="prev" title="WinDBG观世界——番外[一]（在C语言中模拟类的虚函数）">
+                WinDBG观世界——番外[一]（在C语言中模拟类的虚函数） <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+      <div id="disqus_thread">
+        <noscript>
+          Please enable JavaScript to view the
+          <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a>
+        </noscript>
+      </div>
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel ">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.jpg"
+               alt="云064" />
+          <p class="site-author-name" itemprop="name">云064</p>
+          <p class="site-description motion-element" itemprop="description">天道酬勤</p>
+        </div>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">11</span>
+              <span class="site-state-item-name">posts</span>
+            </a>
+          </div>
+
+          
+            <div class="site-state-item site-state-categories">
+              <a href="/categories">
+                <span class="site-state-item-count">4</span>
+                <span class="site-state-item-name">categories</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">10</span>
+                <span class="site-state-item-name">tags</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/cloudy064" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="http://weibo.com/1954466480" target="_blank" title="weibo">
+                  
+                    <i class="fa fa-fw fa-globe"></i>
+                  
+                  weibo
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+      </section>
+
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+            
+              
+            
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#内容概要"><span class="nav-text">内容概要</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#执行哪个函数？运行的时候才知道啊！"><span class="nav-text">执行哪个函数？运行的时候才知道啊！</span></a></li></ol></div>
+            
+          </div>
+        </section>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy;  2016 - 
+  <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">云064</span>
+</div>
+
+<div class="powered-by">
+  Powered by <a class="theme-link" href="http://hexo.io">Hexo</a>
+</div>
+
+<div class="theme-info">
+  Theme -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Mist
+  </a>
+</div>
+
+        
+
+<div class="busuanzi-count">
+
+  <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="site-uv"><i class="fa fa-user"></i><span class="busuanzi-value" id="busuanzi_value_site_uv"></span></span>
+  
+
+  
+    <span class="site-pv"><i class="fa fa-eye"></i><span class="busuanzi-value" id="busuanzi_value_site_pv"></span></span>
+  
+  
+</div>
+
+
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/vendors/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.0.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.0.1"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.0.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.0.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.0.1"></script>
+
+
+
+  
+
+
+
+  
+
+    <script type="text/javascript">
+      var disqus_shortname = 'cloudy064';
+      var disqus_identifier = '2016/04/26/windbg-windbg-chapter4/';
+      var disqus_title = "WinDBG观世界（四）";
+      var disqus_url = 'https://cloudy064.github.io/2016/04/26/windbg-windbg-chapter4/';
+
+      function run_disqus_script(disqus_script){
+        var dsq = document.createElement('script');
+        dsq.type = 'text/javascript';
+        dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/' + disqus_script;
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+      }
+
+      run_disqus_script('count.js');
+      
+        run_disqus_script('embed.js');
+      
+    </script>
+  
+
+
+
+
+  
+  
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length == 0) {
+       search_path = "search.xml";
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    function proceedsearch() {
+      $("body").append('<div class="popoverlay">').css('overflow', 'hidden');
+      $('.popup').toggle();
+
+    }
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+    'use strict';
+    $.ajax({
+        url: path,
+        dataType: "xml",
+        async: true,
+        success: function( xmlResponse ) {
+            // get the contents from search data
+            isfetched = true;
+            $('.popup').detach().appendTo('.header-inner');
+            var datas = $( "entry", xmlResponse ).map(function() {
+                return {
+                    title: $( "title", this ).text(),
+                    content: $("content",this).text(),
+                    url: $( "url" , this).text()
+                };
+            }).get();
+            var $input = document.getElementById(search_id);
+            var $resultContent = document.getElementById(content_id);
+            $input.addEventListener('input', function(){
+                var matchcounts = 0;
+                var str='<ul class=\"search-result-list\">';                
+                var keywords = this.value.trim().toLowerCase().split(/[\s\-]+/);
+                $resultContent.innerHTML = "";
+                if (this.value.trim().length > 1) {
+                // perform local searching
+                datas.forEach(function(data) {
+                    var isMatch = true;
+                    var content_index = [];
+                    var data_title = data.title.trim().toLowerCase();
+                    var data_content = data.content.trim().replace(/<[^>]+>/g,"").toLowerCase();
+                    var data_url = data.url;
+                    var index_title = -1;
+                    var index_content = -1;
+                    var first_occur = -1;
+                    // only match artiles with not empty titles and contents
+                    if(data_title != '' && data_content != '') {
+                        keywords.forEach(function(keyword, i) {
+                            index_title = data_title.indexOf(keyword);
+                            index_content = data_content.indexOf(keyword);
+                            if( index_title < 0 && index_content < 0 ){
+                                isMatch = false;
+                            } else {
+                                if (index_content < 0) {
+                                    index_content = 0;
+                                }
+                                if (i == 0) {
+                                    first_occur = index_content;
+                                }
+                            }
+                        });
+                    }
+                    // show search results
+                    if (isMatch) {
+                        matchcounts += 1;
+                        str += "<li><a href='"+ data_url +"' class='search-result-title'>"+ data_title +"</a>";
+                        var content = data.content.trim().replace(/<[^>]+>/g,"");
+                        if (first_occur >= 0) {
+                            // cut out 100 characters
+                            var start = first_occur - 20;
+                            var end = first_occur + 80;
+                            if(start < 0){
+                                start = 0;
+                            }
+                            if(start == 0){
+                                end = 50;
+                            }
+                            if(end > content.length){
+                                end = content.length;
+                            }
+                            var match_content = content.substring(start, end);
+                            // highlight all keywords
+                            keywords.forEach(function(keyword){
+                                var regS = new RegExp(keyword, "gi");
+                                match_content = match_content.replace(regS, "<b class=\"search-keyword\">"+keyword+"</b>");
+                            });
+                            
+                            str += "<p class=\"search-result\">" + match_content +"...</p>"
+                        }
+                        str += "</li>";
+                    }
+                })};
+                str += "</ul>";
+                if (matchcounts == 0) { str = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>' }
+                if (keywords == "") { str = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>' }
+                $resultContent.innerHTML = str;
+            });
+            proceedsearch();
+        }
+    });}
+
+    // handle and trigger popup window;
+    $('.popup-trigger').mousedown(function(e) {
+      e.stopPropagation();
+      if (isfetched == false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+
+    });
+
+    $('.popup-btn-close').click(function(e){
+      $('.popup').hide();
+      $(".popoverlay").remove();
+      $('body').css('overflow', '');
+    });
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+  </script>
+
+  
+  <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      tex2jax: {
+        inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+        processEscapes: true,
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+      }
+    });
+  </script>
+
+  <script type="text/x-mathjax-config">
+    MathJax.Hub.Queue(function() {
+      var all = MathJax.Hub.getAllJax(), i;
+      for (i=0; i < all.length; i += 1) {
+        all[i].SourceElement().parentNode.className += ' has-jax';
+      }
+    });
+  </script>
+  <script type="text/javascript" src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+
+  
+
+  
+  <script src="https://cdn1.lncld.net/static/js/av-core-mini-0.6.1.js"></script>
+  <script>AV.initialize("XrsYXlxfuX3wP1oGGq5JHS1T-gzGzoHsz", "ssoUH5gCLxwRkjdBQtCpRCoQ");</script>
+  <script>
+    function showTime(Counter) {
+      var query = new AV.Query(Counter);
+      var entries = [];
+      var $visitors = $(".leancloud_visitors");
+
+      $visitors.each(function () {
+        entries.push( $(this).attr("id").trim() );
+      });
+
+      query.containedIn('url', entries);
+      query.find()
+        .done(function (results) {
+          var COUNT_CONTAINER_REF = '.leancloud-visitors-count';
+
+          if (results.length === 0) {
+            $visitors.find(COUNT_CONTAINER_REF).text(0);
+            return;
+          }
+
+          for (var i = 0; i < results.length; i++) {
+            var item = results[i];
+            var url = item.get('url');
+            var time = item.get('time');
+            var element = document.getElementById(url);
+
+            $(element).find(COUNT_CONTAINER_REF).text(time);
+          }
+          for(var i = 0; i < entries.length; i++) {
+            var url = entries[i];
+            var element = document.getElementById(url);
+            var countSpan = $(element).find(COUNT_CONTAINER_REF);
+            if( countSpan.text() == '') {
+              countSpan.text(0);
+            }
+          }
+        })
+        .fail(function (object, error) {
+          console.log("Error: " + error.code + " " + error.message);
+        });
+    }
+
+    function addCount(Counter) {
+      var $visitors = $(".leancloud_visitors");
+      var url = $visitors.attr('id').trim();
+      var title = $visitors.attr('data-flag-title').trim();
+      var query = new AV.Query(Counter);
+
+      query.equalTo("url", url);
+      query.find({
+        success: function(results) {
+          if (results.length > 0) {
+            var counter = results[0];
+            counter.fetchWhenSave(true);
+            counter.increment("time");
+            counter.save(null, {
+              success: function(counter) {
+                var $element = $(document.getElementById(url));
+                $element.find('.leancloud-visitors-count').text(counter.get('time'));
+              },
+              error: function(counter, error) {
+                console.log('Failed to save Visitor num, with error message: ' + error.message);
+              }
+            });
+          } else {
+            var newcounter = new Counter();
+            /* Set ACL */
+            var acl = new AV.ACL();
+            acl.setPublicReadAccess(true);
+            acl.setPublicWriteAccess(true);
+            newcounter.setACL(acl);
+            /* End Set ACL */
+            newcounter.set("title", title);
+            newcounter.set("url", url);
+            newcounter.set("time", 1);
+            newcounter.save(null, {
+              success: function(newcounter) {
+                var $element = $(document.getElementById(url));
+                $element.find('.leancloud-visitors-count').text(newcounter.get('time'));
+              },
+              error: function(newcounter, error) {
+                console.log('Failed to create');
+              }
+            });
+          }
+        },
+        error: function(error) {
+          console.log('Error:' + error.code + " " + error.message);
+        }
+      });
+    }
+
+    $(function() {
+      var Counter = AV.Object.extend("Counter");
+      if ($('.leancloud_visitors').length == 1) {
+        addCount(Counter);
+      } else if ($('.post-title-link').length > 1) {
+        showTime(Counter);
+      }
+    });
+  </script>
+
+
+
+  
+<script type="text/javascript" async src="//push.zhanzhang.baidu.com/push.js">
+</script>
+
+
+</body>
+</html>

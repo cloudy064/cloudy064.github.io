@@ -1,0 +1,1099 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/vendors/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/vendors/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.0.1" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="c++,windbg,disassembly," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="Binary World" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.0.1" />
+
+
+
+
+
+
+<meta name="description" content="导言技术的研究是一个无底洞，如果想要在技术上有所突破，首先得耐得住寂寞，三分钟热度的激情、三天打鱼两天晒网都是不可取，确实能在这个浮躁的社会里面要想耐下性子来好好研究一番的人实在是不多。不妨打开浏览器、甚至是你的qq聊天工具，基本上到处都能看到XX天精通C++，月薪XXXX之类的话。其实后一句话才是重点，如果不是为了追求更好的生活，我想程序员的人数应该会减少一大半。我曾经把程序员分为几个档次:初级">
+<meta name="keywords" content="c++,windbg,disassembly">
+<meta property="og:type" content="article">
+<meta property="og:title" content="WinDBG观世界（一）">
+<meta property="og:url" content="https://cloudy064.github.io/2016/04/10/windbg-windbg-chapter1/index.html">
+<meta property="og:site_name" content="Binary World">
+<meta property="og:description" content="导言技术的研究是一个无底洞，如果想要在技术上有所突破，首先得耐得住寂寞，三分钟热度的激情、三天打鱼两天晒网都是不可取，确实能在这个浮躁的社会里面要想耐下性子来好好研究一番的人实在是不多。不妨打开浏览器、甚至是你的qq聊天工具，基本上到处都能看到XX天精通C++，月薪XXXX之类的话。其实后一句话才是重点，如果不是为了追求更好的生活，我想程序员的人数应该会减少一大半。我曾经把程序员分为几个档次:初级">
+<meta property="og:locale" content="en">
+<meta property="og:image" content="https://cloudy064.github.io/2016/04/10/windbg-windbg-chapter1/runexe.png">
+<meta property="og:image" content="https://cloudy064.github.io/2016/04/10/windbg-windbg-chapter1/sourcemode.png">
+<meta property="og:image" content="https://cloudy064.github.io/2016/04/10/windbg-windbg-chapter1/disassembly.png">
+<meta property="og:image" content="https://cloudy064.github.io/2016/04/10/windbg-windbg-chapter1/registers.png">
+<meta property="og:image" content="https://cloudy064.github.io/2016/04/10/windbg-windbg-chapter1/pushebp.png">
+<meta property="og:image" content="https://cloudy064.github.io/2016/04/10/windbg-windbg-chapter1/pushresult.png">
+<meta property="og:image" content="https://cloudy064.github.io/2016/04/10/windbg-windbg-chapter1/testfuncsource.png">
+<meta property="og:image" content="https://cloudy064.github.io/2016/04/10/windbg-windbg-chapter1/callstack.png">
+<meta property="og:image" content="https://cloudy064.github.io/2016/04/10/windbg-windbg-chapter1/callstackstatus.png">
+<meta property="og:image" content="https://cloudy064.github.io/2016/04/10/windbg-windbg-chapter1/pushebxesiedi.png">
+<meta property="og:image" content="https://cloudy064.github.io/2016/04/10/windbg-windbg-chapter1/stackmemory.png">
+<meta property="og:image" content="https://cloudy064.github.io/2016/04/10/windbg-windbg-chapter1/afterrepstos.png">
+<meta property="og:image" content="https://cloudy064.github.io/2016/04/10/windbg-windbg-chapter1/afterrepstosmem.png">
+<meta property="og:image" content="https://cloudy064.github.io/2016/04/10/windbg-windbg-chapter1/aftera10.png">
+<meta property="og:image" content="https://cloudy064.github.io/2016/04/10/windbg-windbg-chapter1/afterda30.png">
+<meta property="og:image" content="https://cloudy064.github.io/2016/04/10/windbg-windbg-chapter1/checkesp.png">
+<meta property="og:updated_time" content="2018-06-27T15:38:33.261Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="WinDBG观世界（一）">
+<meta name="twitter:description" content="导言技术的研究是一个无底洞，如果想要在技术上有所突破，首先得耐得住寂寞，三分钟热度的激情、三天打鱼两天晒网都是不可取，确实能在这个浮躁的社会里面要想耐下性子来好好研究一番的人实在是不多。不妨打开浏览器、甚至是你的qq聊天工具，基本上到处都能看到XX天精通C++，月薪XXXX之类的话。其实后一句话才是重点，如果不是为了追求更好的生活，我想程序员的人数应该会减少一大半。我曾经把程序员分为几个档次:初级">
+<meta name="twitter:image" content="https://cloudy064.github.io/2016/04/10/windbg-windbg-chapter1/runexe.png">
+
+
+
+<script type="text/javascript" id="hexo.configuration">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    scheme: 'Mist',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: 0,
+      author: 'Author'
+    }
+  };
+</script>
+
+
+
+
+  <link rel="canonical" href="https://cloudy064.github.io/2016/04/10/windbg-windbg-chapter1/"/>
+
+  <title> WinDBG观世界（一） | Binary World </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="en">
+
+  
+
+
+
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?1ea1b41881eac9926d58af6b5fc9b354";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">Binary World</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle">cloudy066</p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            Categories
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archives
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="#" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br />
+            
+            Search
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup">
+ <span class="search-icon fa fa-search"></span>
+ <input type="text" id="local-search-input">
+ <div id="local-search-result"></div>
+ <span class="popup-btn-close">close</span>
+</div>
+
+
+    </div>
+  
+</nav>
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                WinDBG观世界（一）
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">Posted on</span>
+            <time itemprop="dateCreated" datetime="2016-04-10T12:19:11+08:00" content="2016-04-10">
+              2016-04-10
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp;
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/windbg/" itemprop="url" rel="index">
+                    <span itemprop="name">windbg</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                &nbsp; | &nbsp;
+                <a href="/2016/04/10/windbg-windbg-chapter1/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2016/04/10/windbg-windbg-chapter1/" itemprop="commentsCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+          
+          
+             <span id="/2016/04/10/windbg-windbg-chapter1/" class="leancloud_visitors" data-flag-title="WinDBG观世界（一）">
+               &nbsp; | &nbsp;
+               <span class="post-meta-item-icon">
+                 <i class="fa fa-eye"></i>
+               </span>
+               <span class="post-meta-item-text">visitors </span>
+               <span class="leancloud-visitors-count"></span>
+              </span>
+          
+
+          
+              &nbsp; | &nbsp;
+              <span class="page-pv"><i class="fa fa-file-o"></i>
+              <span class="busuanzi-value" id="busuanzi_value_page_pv" ></span>
+              </span>
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="导言"><a href="#导言" class="headerlink" title="导言"></a>导言</h2><p>技术的研究是一个无底洞，如果想要在技术上有所突破，首先得耐得住寂寞，三分钟热度的激情、三天打鱼两天晒网都是不可取，确实能在这个浮躁的社会里面要想耐下性子来好好研究一番的人实在是不多。不妨打开浏览器、甚至是你的qq聊天工具，基本上到处都能看到XX天精通C++，月薪XXXX之类的话。其实后一句话才是重点，如果不是为了追求更好的生活，我想程序员的人数应该会减少一大半。我曾经把程序员分为几个档次:初级的就叫API Caller，粗俗一点就叫码农，只需要保证程序能够按照预期的情况运行，不出bug就行，当然这其实也是大多数程序员的愿望啦。至于为什么叫API Caller，大家看名字应该就知道了吧；中级的叫做Programmer，大多数人也处于这个等级中，我也不例外，属于靠着代码吃饭的同时，也会努力在代码的架构上和整洁上下一番功夫；再往上就是researcher和architect，属于小到技术细节，大到程序框架都能研究个透彻，并且能够信手拈来。好吧，扯远了，其实开心就好。我这次做WinDBG的博客，主要是和大家一起探讨一下程序背后的细节，所谓WinDBG观世界，其实就是程序的世界。这里我推荐大家可以看这本书《程序员的自我修养》，本专题和该书的内容有很大的联系，但是本系列内容只会涉及到windows编程，所使用的工具有Visual Studio 2005和WinDBG。通过对该系列文章的学习，你可以认识到程序编译到运行的原理，以及WinDBG的基本使用。那么闲话少叙，切入正题吧。<br><a id="more"></a></p>
+<h2 id="第一个程序"><a href="#第一个程序" class="headerlink" title="第一个程序"></a>第一个程序</h2><p>Hello, World!</p>
+<p>本着尽可能简单的思想，我把第一个程序简化成如下的样子：<br><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">TestFunc</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">int</span> a = <span class="number">10</span>;</span><br><span class="line">    <span class="keyword">int</span> b = <span class="number">20</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">int</span> c = a + b;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">int</span> d = a + <span class="number">30</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">int</span> e = <span class="number">1</span> + <span class="number">3</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc, <span class="keyword">char</span>** argv)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    TestFunc();</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>没有任何<code>include</code>，可能比Hello, World!都简单，但是这么简单的语句，</p>
+<ul>
+<li>在经过编译器之后变成了什么样呢？</li>
+<li>开了优化和没有开优化有什么区别呢？</li>
+<li>它在生成了exe之后，exe里面又存放了哪些东西呢？</li>
+<li>上面的变量和常量在exe中又是怎样体现的？</li>
+</ul>
+<p>如果你对上面这些问题都了然于胸，那么这一章不适合你，你可以等下一章了。如果你对C++基本语法都无法理解，那么也很遗憾，本系列你看不懂。</p>
+<p>那么仍然继续读下来的同学，首先要做的事情就是把上面这段代码敲到VS中，然后进行编译就行了。</p>
+<h2 id="一切都是有条不紊"><a href="#一切都是有条不紊" class="headerlink" title="一切都是有条不紊"></a>一切都是有条不紊</h2><p>这里我们针对Debug编译出来的程序作分析，打开你的WinDBG，然后按下<code>Ctrl+S</code>，在弹出的对话框中输入微软符号路径和本地符号路径，我的内容如下：<br><figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">D:</span>\localsymbols;SRV*<span class="string">D:</span>\localsymbols*<span class="string">http:</span><span class="comment">//msdl.microsoft.com/download/symbols;</span></span><br></pre></td></tr></table></figure></p>
+<p>然后按下<code>Ctrl+E</code>，运行我们编译出来的程序。然后WinDBG展示如下：<br><img src="/2016/04/10/windbg-windbg-chapter1/runexe.png" title="程序执行界面"></p>
+<p>我们需要在main函数执行的地方下一个断点，以便我们观察程序运行情况，那么我们可以使用下面的命令，然后回车：<br><figure class="highlight armasm"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">bp </span>HelloWorld2005!main</span><br></pre></td></tr></table></figure></p>
+<p>因为我的程序名字叫做HelloWorld2005，如果你的exe是其他名字记得调整。</p>
+<p>输入g回车，WinDBG会执行到main函数时暂定，并自动帮你加载程序的源码。我们这里想了解的是程序背后运作的原理，所以这里更想看到的是汇编代码，很简单，按下<code>Alt+7</code>就可以了。</p>
+<p>这个时候还没准备好开始调试，还需要把Debug下拉菜单中的Source Mode选项去掉，因为在加载了代码的情况下，WinDBG是以单句代码为单位进行调试的：<br><img src="/2016/04/10/windbg-windbg-chapter1/sourcemode.png" title="Source Mode"></p>
+<p>那么从现在开始，调试的操作都和VS一样了，F10是Step Over，F11是Step Into,Shift+F11是Step Out。好了，我们先看汇编代码好了，一句一句来理解。从HelloWorld2005!main开始到ret为止，就是main函数的所有的实现了，怎么样很简短吧，但是也很让人头疼，因为分析起来也不是那么容易的：<br><img src="/2016/04/10/windbg-windbg-chapter1/disassembly.png" title="汇编代码"></p>
+<p>首先看第一行，<br><figure class="highlight x86asm"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">push</span> <span class="built_in">ebp</span></span><br></pre></td></tr></table></figure></p>
+<p>好吧，看到这一句想到的几个问题就是</p>
+<ul>
+<li>它是干嘛的？</li>
+<li>ebp里面放了什么东西？</li>
+</ul>
+<p>那么我这里只能大致告诉你这句话究竟发生了什么事情，因为说多了反而不好理解。</p>
+<p><code>push ebp</code>是将ebp寄存器中保存的值进行入栈操作，寄存器如果不明白的话，可以把寄存器当做是一个盒子，里面放了一些数值，并且一台电脑会提供给你多个盒子进行使用。你每次在单步调试时，WinDBG都会把这些盒子里面的数字展示给你看，如下图为当前的寄存器的状态：<br><img src="/2016/04/10/windbg-windbg-chapter1/registers.png" title="寄存器"></p>
+<p>可以看到ebp中存放了0019ff78(Windbg中展示的数字都是十六进制的，没有前缀0x，但是可能会有后缀h)。它的含义其实是当前函数在堆栈上申请的内存的基地址，具体解释我之后会带出来，此处先不做过多说明。</p>
+<p>然后就是push操作对ebp做了什么？有一定C++基础的同学一定都知道局部变量使用的是栈内存，而new出来的对象使用的是堆内存。这里push esp就是把ebp的内容放到栈上，那么这个栈在哪里呢？留着这个疑问，我们按下F10单步执行，观察前后的寄存器的值有什么不同：<br><img src="/2016/04/10/windbg-windbg-chapter1/pushebp.png" title="push ebp"></p>
+<p>能看出来么？一共只有两个寄存器发生了变化，eip和esp。</p>
+<p>我们这里不难发现，eip和汇编代码左边那堆数字好像有点关系，没错，这个寄存器永远都指向了下一步执行的代码的地址。恩恩，汇编代码左边的那8位数字就是该条汇编代码在该exe运行时的具体地址。</p>
+<p>然后就是esp了，它才是这次的主角，它的值从0019ff2c变成了0019ff28，减少了4，而ebp的值是0019ff78，正好四个字节，这不是个巧合，esp永远都指向当前栈的栈顶。这次入栈操作一共经过下面两个步骤：</p>
+<ol>
+<li>esp-4</li>
+<li>[esp]=ebp</li>
+</ol>
+<p>我们还可以通过Windbg命令来验证一下，输入<code>dd 0019ff28</code>即可查看0019ff28内存地址附近的内容，也可以直接输入<code>dd esp</code>。<br><img src="/2016/04/10/windbg-windbg-chapter1/pushresult.png" title="push result"></p>
+<p>怎么样，第一个字节是不是和ebp的内容一样？这样的话ebp此时的值就可以认为是被保存了起来，并且如果以后需要用到该值，可以使用<code>pop ebp</code>来获取。</p>
+<p>要想理解ebp的含义，那么不如在TestFunc的地方下一个断点，还记得什么指令么：<code>bp HelloWorld2005!TestFunc</code>。然后输入g，回车。我们便来到了TestFunc函数的入口处：<br><img src="/2016/04/10/windbg-windbg-chapter1/testfuncsource.png" title="TestFunc disassembly"></p>
+<p>这时我们可以不忙着看汇编实现，尝试着输入kbn，来看下当前的函数调用堆栈：<br><img src="/2016/04/10/windbg-windbg-chapter1/callstack.png" title="Callstack"></p>
+<p>这里我简单说明下程序执行遇到函数调用会发生什么动作（下面的顺序不代表动作的先后顺序）：</p>
+<ul>
+<li>保存上一个函数的局部变量等信息</li>
+<li>保存函数调用点</li>
+<li>将函数调用参数入栈</li>
+<li>调用函数</li>
+</ul>
+<p>那么这里显示的函数调用堆栈，主要为我们展示了下面几个信息：</p>
+<ol>
+<li>ChildEBP: 当前函数在堆栈上申请的内存的基地址</li>
+<li>RetAddr: 函数的返回地址，或者理解为该函数返回后，继续执行的那个地址</li>
+<li>Args to Child: 函数参数的值</li>
+<li>函数名和所在代码位置信息</li>
+</ol>
+<p>那么这里ChildEBP和ebp寄存器名字相似绝对不是偶然，恩恩，你猜对了，ebp中保存的就是当前函数在堆栈上所使用的一小部分内存的基地址。众所周知，在函数中申请局部变量是需要消耗栈上内存的，那么在有多个函数调用发生时，为了能够不破坏彼此函数之间的堆栈信息，操作系统在函数调用时，会将其中一部分堆栈区间划分给该函数，而该函数如果想要申请局部变量，使用这块堆栈区间就可以了。比如下面这块代码：<br><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">func1</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  <span class="keyword">int</span> a;</span><br><span class="line">  <span class="keyword">int</span> b;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">func2</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  <span class="keyword">int</span> a;</span><br><span class="line">  <span class="keyword">int</span> b;</span><br><span class="line">  func1();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  <span class="keyword">int</span> a;</span><br><span class="line">  <span class="keyword">int</span> b;</span><br><span class="line">  func2();</span><br><span class="line">  <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>它们过程中形成的堆栈可能会如下图所示：<br><img src="/2016/04/10/windbg-windbg-chapter1/callstackstatus.png" title="堆栈内容"></p>
+<p>每一个函数拥有自己的一个局部堆栈，然后在自己的局部堆栈中保存局部变量内容。如果发生了函数调用，那么就会把上一个函数的堆栈区间块的起始地址进行压栈，以便函数返回时对局部堆栈信息进行恢复。</p>
+<p>所以每次函数调用一开始的两句话<br><figure class="highlight x86asm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">push</span> <span class="built_in">ebp</span></span><br><span class="line"><span class="keyword">mov</span> <span class="built_in">ebp</span>, <span class="built_in">esp</span></span><br></pre></td></tr></table></figure></p>
+<p>就是为了做两个工作：</p>
+<ol>
+<li>保存上一个函数的局部堆栈起始地址</li>
+<li>更新本次函数局部堆栈的起始地址</li>
+</ol>
+<p>还记得esp指向的是什么地方吗？恩，当前堆栈的顶部。所以这里需要注意的是，上一个函数的堆栈区间的结束地址就是本次函数堆栈区间的起始位置。但是到目前位置还没有为TestFunc函数分配堆栈空间，那么我们继续往下看：<br><figure class="highlight x86asm"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">sub</span> <span class="built_in">esp</span>, <span class="number">0FCh</span></span><br></pre></td></tr></table></figure></p>
+<p>这里把esp的值减去0x0FC的大小，这样ebp~esp之间的区域就形成了TestFunc这个函数的局部堆栈区间了。</p>
+<p>等等，那我怎么使用这块区间呢？你刚刚不是说使用push和pop来对堆栈进行操作的吗？怎么好像和你刚刚说的不一样呢？恩，用一分钟时间仔细想一想这些问题。想完之后，继续跟着我往下面一句一句执行：<br><figure class="highlight x86asm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">push</span> <span class="built_in">ebx</span></span><br><span class="line"><span class="keyword">push</span> <span class="built_in">esi</span></span><br><span class="line"><span class="keyword">push</span> <span class="built_in">edi</span></span><br></pre></td></tr></table></figure></p>
+<p>这四句话我目前不想解释，因为也不需要知道他们的用途，但是请记住它的结果，那就是esp减少了3*4=0ch，并且esp指向的是edi的值，esp+4指向的是esi的值，esp+8指向的是ebx的值，如下图所示：<br><img src="/2016/04/10/windbg-windbg-chapter1/pushebxesiedi.png" title="此时esp指向的内容"></p>
+<p>同时现在局部堆栈内存分布的情况如下：<br><img src="/2016/04/10/windbg-windbg-chapter1/stackmemory.png" title="内存分布"></p>
+<p>是不是现在一目了然了呢，内存地址由上而下依次变大，(ebp-0fch)~ebp的区间还没有做任何事情，然后由于刚刚压栈了三个寄存器，所以栈的顶部又出现了三个值。然后我们继续往下执行：<br><figure class="highlight x86asm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">lea</span> <span class="built_in">edi</span>, [<span class="built_in">ebp</span>-<span class="number">0FCh</span>]</span><br><span class="line"><span class="keyword">mov</span> <span class="built_in">ecx</span>, <span class="number">3Fh</span></span><br><span class="line"><span class="keyword">mov</span> <span class="built_in">eax</span>, <span class="number">0CCCCCCCCh</span></span><br><span class="line"><span class="keyword">rep</span> stos <span class="built_in">dword</span> <span class="built_in">ptr</span> <span class="built_in">es</span>:[<span class="built_in">edi</span>]</span><br></pre></td></tr></table></figure></p>
+<p>我承认这四句话一开始我也不知道有啥用，直到我google了rep stos指令，其实这句话就是调用了一个函数，作用就是从es:edi指向的地址开始，以DWORD为单位，填充0CCCCCCCCh(eax)，一共填充3F(ecx)次，并且每次填充edi都会加上4，ecx减去1。我们可以计算一下一共是3F*4=FC个字节，正好和上面的预留的局部堆栈空间大小一致。所以这个函数在这里起到的作用其实就是初始化你预留的堆栈内存。而cc在汇编中其实就是int 3，触发一个中断。我猜windows这么做的原因应该就是为了阻止你的程序跑飞吧，因为如果执行到int 3时，你的程序就会崩溃。你也许会好奇es:edi指向的地址到底是多少，呵，好奇心是好的，只不过这个不是这次的重点，所以这次就不讲了，提供给你几个关键字，自己搜索一下吧：段寄存器，实地址模式，保护模式。这里es:edi的地址就是edi的值。</p>
+<p>执行完这三句话之后，我们来比较一下前后寄存器的值变化，主要看ecx和edi:<br><img src="/2016/04/10/windbg-windbg-chapter1/afterrepstos.png" title="执行完rep stos"></p>
+<p>可以看出ecx变成了0，edi变成了0019fe54，值和ebp一样，稍微转一下脑筋其实就知道，上面的这三句话其实就可以翻译成下面的这段代码：<br><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">while</span> (ecx &gt; <span class="number">0</span>)</span><br><span class="line">&#123;</span><br><span class="line">  * esi = eax;</span><br><span class="line">  esi += <span class="number">4</span>;</span><br><span class="line">  ecx--;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>其次我们可以继续通过dd的方式来查看内存的变化，不过我也推荐你按下<code>alt+5</code>，用Memory窗口来查看内存。然后在Virtual的输入框中输入edi初始的值，或者直接输入ebp-0fch：<br><img src="/2016/04/10/windbg-windbg-chapter1/afterrepstosmem.png" title="执行完rep stos之后的内存"></p>
+<p>可以看到从(ebp-0fch)~ebp的区间，内存全部被清除为0CCCCCCCCh了，恩，就是这么神奇。那位同学，你先别急着走啊喂，坐下，我现在就开始讲函数主体了。</p>
+<p>第一句是<code>int a = 10;</code>，简单声明了一个变量a，并给他赋值为10，那么我们到汇编里面找找看这个a在哪里。诶，好像整个函数里面都没有单独出现a这个字符？难道是优化？No！还记得以前老师说过或者看书看到，变量名不占任何空间，它只是一个标识符。那么a这个变量它标识的起始就是[ebp-8]这个地址开始的一个DWORD，windows汇编中DWORD就是4个字节，额，你要问我为什么exe能够记住每个地址对应于哪个变量啊，编译器生成的指令呗（有兴趣的可以去看下编译器设计中的代码生成）。所以<code>int a = 10;</code>这句话起始就被编译成了<code>mov dword ptr [ebp-8], 0Ah</code>。能够在上面我画的图里面指出[ebp-8]位于哪里么？<br><img src="/2016/04/10/windbg-windbg-chapter1/aftera10.png" title="执行完int a = 10"></p>
+<p>如果你要问我为什么中间留出了4个字节没有用，额……好吧我不知道，诚信。我们继续往下看吧。</p>
+<p>所以<code>int b = 20;</code>这句代码也不用我说了吧，虽然他中间还是空出来了8个字节。</p>
+<p>接下来<code>int c = a + b;</code>，它对应于汇编中的语句是下面三句：<br><figure class="highlight x86asm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">mov</span> <span class="built_in">eax</span>, <span class="built_in">dword</span> <span class="built_in">ptr</span> [<span class="built_in">ebp</span>-<span class="number">8</span>]</span><br><span class="line"><span class="keyword">add</span> <span class="built_in">eax</span>, <span class="built_in">dword</span> <span class="built_in">ptr</span> [<span class="built_in">ebp</span>-<span class="number">14h</span>]</span><br><span class="line"><span class="keyword">mov</span> <span class="built_in">dword</span> <span class="built_in">ptr</span> [<span class="built_in">ebp</span>-<span class="number">20h</span>], <span class="built_in">eax</span></span><br></pre></td></tr></table></figure></p>
+<p>你可能会觉得好繁琐，为什么要先把<code>dword ptr [ebp-8]</code>指向的值放到eax中？这个就认了吧，人家硬件厂商提供给你的add指令必须要在寄存器上操作，你有什么办法。所以在得到a和b的和之后，再将值放到ebp-20h指向的地址上。下面的<code>int d = a + 30;</code>也是同理，所以会形成下图所示的内存结构：<br><img src="/2016/04/10/windbg-windbg-chapter1/afterda30.png" title="执行完int d= a + 30"></p>
+<p>最后一句最神奇，汇编里面直接把<code>int e = 1 + 3;</code>翻译成了<code>mov dword ptr [ebp-38h], 4</code>，也就是说编译器在编译的时候已经帮你把1+3的结果给你算出来了。</p>
+<p>那么到现在为止，函数的主体已经展示完成了。那么现在到了函数结束清理堆栈的时间了。</p>
+<p>下面的三句和上面的三个push执行了一个逆操作：<br><figure class="highlight x86asm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">pop</span> <span class="built_in">edi</span></span><br><span class="line"><span class="keyword">pop</span> <span class="built_in">esi</span></span><br><span class="line"><span class="keyword">pop</span> <span class="built_in">ebx</span></span><br></pre></td></tr></table></figure></p>
+<p>这里就是恢复了上一个函数的堆栈情况。</p>
+<p>对于下面一条语句<br><figure class="highlight x86asm"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">mov</span> <span class="built_in">esp</span>, <span class="built_in">ebp</span></span><br></pre></td></tr></table></figure></p>
+<p>由于上一个函数堆栈的结束位置和本次调用函数的开始位置相等，所以当前ebp的值其实就等于上一个函数esp的值，所以这里其实就起到了恢复局部堆栈的栈顶地址的作用。</p>
+<p>最后一句<code>pop ebp</code>和函数调用最开始的<code>push ebp</code>相对应，恢复上一个函数的局部堆栈基地址。</p>
+<p>那么关于TestFunc的调用已经全部讲完了。我们再次回到main函数中，其实接下来执行的语句和刚刚分析TestFunc差不多，不过这里又多了下面这几句：<br><img src="/2016/04/10/windbg-windbg-chapter1/checkesp.png" title="检查ESP"></p>
+<p>为什么能够直接用ebp得到esp上一次的值，还要用esp-0C0h这么麻烦呢？其实这里的作用只是为了检查堆栈是否出现了异常，如果堆栈异常了，esp-0c0h的值可能就不等于ebp，这里仅仅做了一个简单的检查处理。</p>
+<p>所以第一期就先讲到这里吧。虽然还有它的优化版本，带参数的函数，函数的重载这些还没讲，不过下次再补上吧。拜拜</p>
+<h2 id="回顾："><a href="#回顾：" class="headerlink" title="回顾："></a>回顾：</h2><h3 id="关于WinDBG"><a href="#关于WinDBG" class="headerlink" title="关于WinDBG"></a>关于WinDBG</h3><ol>
+<li>dp 模块名!函数名 用来给一个函数下断点。然后F10单步调试，F11进入到函数实现，Shift+F11跳出函数</li>
+<li>alt+7 打开反汇编代码</li>
+<li>alt+5 打开内存窗口</li>
+<li>dd 内存地址 用来查看该内存地址下的内容</li>
+<li>kbn 显示当前函数调用堆栈信息</li>
+</ol>
+<h3 id="关于汇编"><a href="#关于汇编" class="headerlink" title="关于汇编"></a>关于汇编</h3><ol>
+<li>ebp记录了当前函数局部堆栈的基地址，esp记录了当前堆栈的栈顶；随着函数的调用和返回，ebp会被不断的压栈和出栈；调用函数的esp和被调用函数的ebp相等</li>
+<li>函数内局部变量以ebp为基地址，从预留的堆栈空间中分配内存的，esp不会发生变化；而push和pop操作，esp则会发生改变</li>
+<li>rep stos指令用于给内存进行赋值，内容记录在eax中，赋值次数记录在ecx中；每次赋值eax都会减1</li>
+<li>再有简单运算可以在编译期决定时，编译期会为你进行优化。</li>
+</ol>
+
+      
+    </div>
+
+    <div>
+      
+        
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/c/" rel="tag">#c++</a>
+          
+            <a href="/tags/windbg/" rel="tag">#windbg</a>
+          
+            <a href="/tags/disassembly/" rel="tag">#disassembly</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+          </div>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2016/04/20/windbg-windbg-chapter2/" rel="prev" title="WinDBG观世界（二）">
+                WinDBG观世界（二） <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+      <div id="disqus_thread">
+        <noscript>
+          Please enable JavaScript to view the
+          <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a>
+        </noscript>
+      </div>
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel ">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.jpg"
+               alt="云064" />
+          <p class="site-author-name" itemprop="name">云064</p>
+          <p class="site-description motion-element" itemprop="description">天道酬勤</p>
+        </div>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">11</span>
+              <span class="site-state-item-name">posts</span>
+            </a>
+          </div>
+
+          
+            <div class="site-state-item site-state-categories">
+              <a href="/categories">
+                <span class="site-state-item-count">4</span>
+                <span class="site-state-item-name">categories</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">10</span>
+                <span class="site-state-item-name">tags</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/cloudy064" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="http://weibo.com/1954466480" target="_blank" title="weibo">
+                  
+                    <i class="fa fa-fw fa-globe"></i>
+                  
+                  weibo
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+      </section>
+
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+            
+              
+            
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#导言"><span class="nav-text">导言</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#第一个程序"><span class="nav-text">第一个程序</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#一切都是有条不紊"><span class="nav-text">一切都是有条不紊</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#回顾："><span class="nav-text">回顾：</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#关于WinDBG"><span class="nav-text">关于WinDBG</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#关于汇编"><span class="nav-text">关于汇编</span></a></li></ol></li></ol></div>
+            
+          </div>
+        </section>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy;  2016 - 
+  <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">云064</span>
+</div>
+
+<div class="powered-by">
+  Powered by <a class="theme-link" href="http://hexo.io">Hexo</a>
+</div>
+
+<div class="theme-info">
+  Theme -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Mist
+  </a>
+</div>
+
+        
+
+<div class="busuanzi-count">
+
+  <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="site-uv"><i class="fa fa-user"></i><span class="busuanzi-value" id="busuanzi_value_site_uv"></span></span>
+  
+
+  
+    <span class="site-pv"><i class="fa fa-eye"></i><span class="busuanzi-value" id="busuanzi_value_site_pv"></span></span>
+  
+  
+</div>
+
+
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/vendors/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.0.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.0.1"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.0.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.0.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.0.1"></script>
+
+
+
+  
+
+
+
+  
+
+    <script type="text/javascript">
+      var disqus_shortname = 'cloudy064';
+      var disqus_identifier = '2016/04/10/windbg-windbg-chapter1/';
+      var disqus_title = "WinDBG观世界（一）";
+      var disqus_url = 'https://cloudy064.github.io/2016/04/10/windbg-windbg-chapter1/';
+
+      function run_disqus_script(disqus_script){
+        var dsq = document.createElement('script');
+        dsq.type = 'text/javascript';
+        dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/' + disqus_script;
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+      }
+
+      run_disqus_script('count.js');
+      
+        run_disqus_script('embed.js');
+      
+    </script>
+  
+
+
+
+
+  
+  
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length == 0) {
+       search_path = "search.xml";
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    function proceedsearch() {
+      $("body").append('<div class="popoverlay">').css('overflow', 'hidden');
+      $('.popup').toggle();
+
+    }
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+    'use strict';
+    $.ajax({
+        url: path,
+        dataType: "xml",
+        async: true,
+        success: function( xmlResponse ) {
+            // get the contents from search data
+            isfetched = true;
+            $('.popup').detach().appendTo('.header-inner');
+            var datas = $( "entry", xmlResponse ).map(function() {
+                return {
+                    title: $( "title", this ).text(),
+                    content: $("content",this).text(),
+                    url: $( "url" , this).text()
+                };
+            }).get();
+            var $input = document.getElementById(search_id);
+            var $resultContent = document.getElementById(content_id);
+            $input.addEventListener('input', function(){
+                var matchcounts = 0;
+                var str='<ul class=\"search-result-list\">';                
+                var keywords = this.value.trim().toLowerCase().split(/[\s\-]+/);
+                $resultContent.innerHTML = "";
+                if (this.value.trim().length > 1) {
+                // perform local searching
+                datas.forEach(function(data) {
+                    var isMatch = true;
+                    var content_index = [];
+                    var data_title = data.title.trim().toLowerCase();
+                    var data_content = data.content.trim().replace(/<[^>]+>/g,"").toLowerCase();
+                    var data_url = data.url;
+                    var index_title = -1;
+                    var index_content = -1;
+                    var first_occur = -1;
+                    // only match artiles with not empty titles and contents
+                    if(data_title != '' && data_content != '') {
+                        keywords.forEach(function(keyword, i) {
+                            index_title = data_title.indexOf(keyword);
+                            index_content = data_content.indexOf(keyword);
+                            if( index_title < 0 && index_content < 0 ){
+                                isMatch = false;
+                            } else {
+                                if (index_content < 0) {
+                                    index_content = 0;
+                                }
+                                if (i == 0) {
+                                    first_occur = index_content;
+                                }
+                            }
+                        });
+                    }
+                    // show search results
+                    if (isMatch) {
+                        matchcounts += 1;
+                        str += "<li><a href='"+ data_url +"' class='search-result-title'>"+ data_title +"</a>";
+                        var content = data.content.trim().replace(/<[^>]+>/g,"");
+                        if (first_occur >= 0) {
+                            // cut out 100 characters
+                            var start = first_occur - 20;
+                            var end = first_occur + 80;
+                            if(start < 0){
+                                start = 0;
+                            }
+                            if(start == 0){
+                                end = 50;
+                            }
+                            if(end > content.length){
+                                end = content.length;
+                            }
+                            var match_content = content.substring(start, end);
+                            // highlight all keywords
+                            keywords.forEach(function(keyword){
+                                var regS = new RegExp(keyword, "gi");
+                                match_content = match_content.replace(regS, "<b class=\"search-keyword\">"+keyword+"</b>");
+                            });
+                            
+                            str += "<p class=\"search-result\">" + match_content +"...</p>"
+                        }
+                        str += "</li>";
+                    }
+                })};
+                str += "</ul>";
+                if (matchcounts == 0) { str = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>' }
+                if (keywords == "") { str = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>' }
+                $resultContent.innerHTML = str;
+            });
+            proceedsearch();
+        }
+    });}
+
+    // handle and trigger popup window;
+    $('.popup-trigger').mousedown(function(e) {
+      e.stopPropagation();
+      if (isfetched == false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+
+    });
+
+    $('.popup-btn-close').click(function(e){
+      $('.popup').hide();
+      $(".popoverlay").remove();
+      $('body').css('overflow', '');
+    });
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+  </script>
+
+  
+  <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      tex2jax: {
+        inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+        processEscapes: true,
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+      }
+    });
+  </script>
+
+  <script type="text/x-mathjax-config">
+    MathJax.Hub.Queue(function() {
+      var all = MathJax.Hub.getAllJax(), i;
+      for (i=0; i < all.length; i += 1) {
+        all[i].SourceElement().parentNode.className += ' has-jax';
+      }
+    });
+  </script>
+  <script type="text/javascript" src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+
+  
+
+  
+  <script src="https://cdn1.lncld.net/static/js/av-core-mini-0.6.1.js"></script>
+  <script>AV.initialize("XrsYXlxfuX3wP1oGGq5JHS1T-gzGzoHsz", "ssoUH5gCLxwRkjdBQtCpRCoQ");</script>
+  <script>
+    function showTime(Counter) {
+      var query = new AV.Query(Counter);
+      var entries = [];
+      var $visitors = $(".leancloud_visitors");
+
+      $visitors.each(function () {
+        entries.push( $(this).attr("id").trim() );
+      });
+
+      query.containedIn('url', entries);
+      query.find()
+        .done(function (results) {
+          var COUNT_CONTAINER_REF = '.leancloud-visitors-count';
+
+          if (results.length === 0) {
+            $visitors.find(COUNT_CONTAINER_REF).text(0);
+            return;
+          }
+
+          for (var i = 0; i < results.length; i++) {
+            var item = results[i];
+            var url = item.get('url');
+            var time = item.get('time');
+            var element = document.getElementById(url);
+
+            $(element).find(COUNT_CONTAINER_REF).text(time);
+          }
+          for(var i = 0; i < entries.length; i++) {
+            var url = entries[i];
+            var element = document.getElementById(url);
+            var countSpan = $(element).find(COUNT_CONTAINER_REF);
+            if( countSpan.text() == '') {
+              countSpan.text(0);
+            }
+          }
+        })
+        .fail(function (object, error) {
+          console.log("Error: " + error.code + " " + error.message);
+        });
+    }
+
+    function addCount(Counter) {
+      var $visitors = $(".leancloud_visitors");
+      var url = $visitors.attr('id').trim();
+      var title = $visitors.attr('data-flag-title').trim();
+      var query = new AV.Query(Counter);
+
+      query.equalTo("url", url);
+      query.find({
+        success: function(results) {
+          if (results.length > 0) {
+            var counter = results[0];
+            counter.fetchWhenSave(true);
+            counter.increment("time");
+            counter.save(null, {
+              success: function(counter) {
+                var $element = $(document.getElementById(url));
+                $element.find('.leancloud-visitors-count').text(counter.get('time'));
+              },
+              error: function(counter, error) {
+                console.log('Failed to save Visitor num, with error message: ' + error.message);
+              }
+            });
+          } else {
+            var newcounter = new Counter();
+            /* Set ACL */
+            var acl = new AV.ACL();
+            acl.setPublicReadAccess(true);
+            acl.setPublicWriteAccess(true);
+            newcounter.setACL(acl);
+            /* End Set ACL */
+            newcounter.set("title", title);
+            newcounter.set("url", url);
+            newcounter.set("time", 1);
+            newcounter.save(null, {
+              success: function(newcounter) {
+                var $element = $(document.getElementById(url));
+                $element.find('.leancloud-visitors-count').text(newcounter.get('time'));
+              },
+              error: function(newcounter, error) {
+                console.log('Failed to create');
+              }
+            });
+          }
+        },
+        error: function(error) {
+          console.log('Error:' + error.code + " " + error.message);
+        }
+      });
+    }
+
+    $(function() {
+      var Counter = AV.Object.extend("Counter");
+      if ($('.leancloud_visitors').length == 1) {
+        addCount(Counter);
+      } else if ($('.post-title-link').length > 1) {
+        showTime(Counter);
+      }
+    });
+  </script>
+
+
+
+  
+<script type="text/javascript" async src="//push.zhanzhang.baidu.com/push.js">
+</script>
+
+
+</body>
+</html>
